@@ -1171,14 +1171,24 @@ select.sel{background:var(--card2);color:var(--txt);border:1.5px solid var(--lin
 
 <!-- ============ FBD PRACTICE ============ -->
 <section class="page" id="page-fbd">
-  <div class="page-head"><h2>🎯 ฝึก<span class="hl">แผนภาพวัตถุอิสระ (FBD)</span></h2><p>ฝึก 4 รูปแบบ สุ่มสถานการณ์ไม่ซ้ำ ตอบถูกรับ 8 XP ต่อข้อ — ตอบถูกครบ 10 ข้อ รับเหรียญ "เซียน FBD"!</p></div>
+  <div class="page-head"><h2>🎯 ฝึก<span class="hl">แผนภาพวัตถุอิสระ (FBD)</span></h2><p>เริ่มที่ <b>ห้องจำลองอิสระ</b> — ออกแบบสถานการณ์เองแล้วดู FBD พร้อมเฉลยวิธีทำละเอียด จากนั้นทดสอบตัวเองด้วยแบบฝึก 4 รูปแบบ (ตอบถูกรับ 8 XP — ครบ 10 ข้อรับเหรียญ "เซียน FBD")</p></div>
   <div class="chip-row" id="fbdModes">
-    <div class="chip active" data-mode="pick">✅ เลือกแรงให้ครบ</div>
+    <div class="chip active" data-mode="lab">🧪 ห้องจำลองอิสระ</div>
+    <div class="chip" data-mode="pick">✅ เลือกแรงให้ครบ</div>
     <div class="chip" data-mode="dir">🧭 ทิศของแรง</div>
     <div class="chip" data-mode="match">🖼️ จับคู่ FBD กับสถานการณ์</div>
     <div class="chip" data-mode="size">⚖️ เทียบขนาดแรง</div>
   </div>
-  <div class="card">
+
+  <div class="card" id="fbdLab" style="padding:12px">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin:4px 6px 10px">
+      <p style="color:var(--muted);font-size:13.5px;flex:1;min-width:240px">ออกแบบสถานการณ์อย่างอิสระ — พื้นราบ/พื้นเอียง · ลูกตุ้ม · สมดุลเชือก 2 เส้น · ลิฟต์ · วัตถุติดกัน ปรับได้ทุกตัวแปร ดู FBD สด ๆ พร้อมกดดูเฉลยสมการแบบละเอียด (ต้องต่ออินเทอร์เน็ต)</p>
+      <a class="sim-link" href="fbd-lab.html" target="_blank" rel="noopener">⛶ เปิดเต็มจอ</a>
+    </div>
+    <iframe id="fbdLabFrame" data-src="fbd-lab.html" title="ห้องจำลองอิสระ FBD" style="width:100%;height:78vh;border:0;border-radius:12px;background:#eef6ff"></iframe>
+  </div>
+
+  <div class="card" id="fbdQuizCard" style="display:none">
     <div class="q-text" id="fbdQ" style="margin-top:0">—</div>
     <canvas id="fbdCv" class="sim-stage" width="900" height="300"></canvas>
     <div id="fbdOpts" class="q-opts" style="margin-top:16px"></div>
@@ -1188,7 +1198,7 @@ select.sel{background:var(--card2);color:var(--txt);border:1.5px solid var(--lin
       <button class="btn" id="fbdNext" onclick="fbd.next()" style="visibility:hidden;margin-left:10px">ข้อถัดไป →</button>
     </div>
   </div>
-  <div class="readouts" style="margin-top:14px">
+  <div class="readouts" id="fbdScore" style="margin-top:14px;display:none">
     <div class="readout">ทำไปแล้ว<b id="fbdDone">0 ข้อ</b></div>
     <div class="readout">ตอบถูก<b id="fbdCorrect">0 ข้อ</b></div>
     <div class="readout">ความแม่นยำ<b id="fbdAcc">—</b></div>
@@ -1344,6 +1354,7 @@ function showPage(id){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.getElementById('page-'+id).classList.add('active');
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active', n.dataset.page===id));
+  if (id === 'fbd' && typeof fbd === 'object') fbd.ensureLab();
   document.querySelector('.sidebar').classList.remove('open');
   window.scrollTo({top:0});
 }
@@ -2250,11 +2261,24 @@ const FBD_BANK = [
 
 const fbd = (()=>{
   const cv = document.getElementById('fbdCv'), ctx = cv.getContext('2d');
-  let mode = 'pick', scn = null, lastId = null, answered = false, picked = new Set(), target = null;
+  let mode = 'lab', scn = null, lastId = null, answered = false, picked = new Set(), target = null;
 
+  function ensureLab(){
+    // โหลด iframe ห้องจำลองอิสระเมื่อถูกเปิดครั้งแรกเท่านั้น (lazy load)
+    const f = document.getElementById('fbdLabFrame');
+    if (!f.getAttribute('src')) f.setAttribute('src', f.dataset.src);
+  }
+  function applyMode(){
+    const lab = mode === 'lab';
+    document.getElementById('fbdLab').style.display = lab ? 'block' : 'none';
+    document.getElementById('fbdQuizCard').style.display = lab ? 'none' : 'block';
+    document.getElementById('fbdScore').style.display = lab ? 'none' : 'flex';
+  }
   document.querySelectorAll('#fbdModes .chip').forEach(c=> c.addEventListener('click', ()=>{
     document.querySelectorAll('#fbdModes .chip').forEach(x=>x.classList.remove('active'));
-    c.classList.add('active'); mode = c.dataset.mode; next();
+    c.classList.add('active'); mode = c.dataset.mode;
+    applyMode();
+    if (mode === 'lab') ensureLab(); else next();
   }));
 
   function rnd(arr){ return arr[(Math.random()*arr.length)|0]; }
@@ -2448,8 +2472,8 @@ const fbd = (()=>{
     document.getElementById('fbdCorrect').textContent = S.fbd.correct + ' ข้อ';
     document.getElementById('fbdAcc').textContent = S.fbd.done ? Math.round(S.fbd.correct/S.fbd.done*100) + '%' : '—';
   }
-  updateScore(); next();
-  return {next, toggle, submit, answer};
+  updateScore(); applyMode();
+  return {next, toggle, submit, answer, ensureLab};
 })();
 
 /* ================== INIT ส่วนขยาย ================== */
