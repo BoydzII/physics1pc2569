@@ -305,6 +305,9 @@ select.sel{background:var(--card2);color:var(--txt);border:1.5px solid var(--lin
 .sol-grid .rhs{white-space:nowrap}
 .sol-grid .rhs small{color:var(--muted);font-family:'Sarabun';font-size:12.5px;margin-left:10px;font-weight:400}
 .sol-concl{margin-top:8px;padding:9px 13px;border-radius:10px;background:rgba(52,211,153,.12);border:1px solid rgba(52,211,153,.35);color:#6ee7b7;font-weight:700;font-size:14.5px}
+.sol-hide{display:none !important}
+.sol-row{animation:fadeUp .35s}
+.sol-ctrl{display:flex;gap:10px;margin:12px 0 6px;flex-wrap:wrap}
 
 /* ===== login & leaderboard & FBD ===== */
 .login-box{margin-top:10px}
@@ -2082,18 +2085,40 @@ const quiz = (()=>{
     document.getElementById('qNext').style.visibility = 'hidden';
     document.getElementById('qNext').textContent = idx === items.length-1 ? '🏁 ดูผลคะแนน' : 'ข้อถัดไป →';
   }
+  let revealIdx = 0, revealTotal = 0;
   function solutionHTML(it){
-    // แสดงเฉลยวิธีทำละเอียด: บล็อกสมการหลายบรรทัด เครื่องหมาย = เรียงตรงกันด้วย grid
+    // เฉลยวิธีทำละเอียดแบบ "เผยทีละขั้น" — เริ่มซ่อนทุกบรรทัด ให้นักเรียนลองคิดก่อน
     if (!it.sol) return '';
+    revealIdx = 0; revealTotal = (it.sol.steps || []).length;
     let h = '';
     if (it.sol.known) h += '<div class="sol-known">📋 <b>โจทย์กำหนด:</b> ' + it.sol.known + '</div>';
-    if (it.sol.steps) h += '<div class="sol-grid">' + it.sol.steps.map(st=>
-      '<span class="lhs">' + st[0] + '</span><span class="eq">=</span><span class="rhs">' + st[1] +
-      (st[2] ? '<small>◀ ' + st[2] + '</small>' : '') + '</span>'
-    ).join('') + '</div>';
-    if (it.sol.concl) h += '<div class="sol-concl">∴ ตอบ ' + it.sol.concl + '</div>';
+    if (revealTotal){
+      h += '<div class="sol-grid sol-hide" id="solGrid">' + it.sol.steps.map((st,i)=>
+        '<span class="lhs sol-row sol-hide" data-r="' + i + '">' + st[0] + '</span>' +
+        '<span class="eq sol-row sol-hide" data-r="' + i + '">=</span>' +
+        '<span class="rhs sol-row sol-hide" data-r="' + i + '">' + st[1] +
+        (st[2] ? '<small>◀ ' + st[2] + '</small>' : '') + '</span>'
+      ).join('') + '</div>';
+      h += '<div class="sol-ctrl" id="solCtrl">' +
+        '<button class="btn sm" id="solStepBtn" onclick="quiz.revealStep()">🤔 ลองคิดเองก่อน แล้วกดดูเฉลยทีละขั้น (' + revealTotal + ' ขั้น)</button>' +
+        '<button class="btn sm ghost" onclick="quiz.revealAll()">เผยทั้งหมด</button></div>';
+    }
+    if (it.sol.concl) h += '<div class="sol-concl' + (revealTotal ? ' sol-hide' : '') + '" id="solConcl">∴ ตอบ ' + it.sol.concl + '</div>';
     return h;
   }
+  function revealStep(){
+    if (revealIdx >= revealTotal) return;
+    document.getElementById('solGrid').classList.remove('sol-hide');
+    document.querySelectorAll('#solGrid .sol-row[data-r="' + revealIdx + '"]').forEach(el=>el.classList.remove('sol-hide'));
+    revealIdx++;
+    if (revealIdx >= revealTotal){
+      document.getElementById('solCtrl').style.display = 'none';
+      const c = document.getElementById('solConcl'); if (c) c.classList.remove('sol-hide');
+    } else {
+      document.getElementById('solStepBtn').innerHTML = '👁️ ดูขั้นถัดไป (เผยแล้ว ' + revealIdx + '/' + revealTotal + ')';
+    }
+  }
+  function revealAll(){ while (revealIdx < revealTotal) revealStep(); }
   function answer(i){
     if (answered) return;
     answered = true;
@@ -2144,7 +2169,7 @@ const quiz = (()=>{
     document.getElementById('quizLevels').style.display = 'grid';
     refreshHUD();
   }
-  return {start, answer, next, retry, quit};
+  return {start, answer, next, retry, quit, revealStep, revealAll};
 })();
 
 /* ================== INIT ================== */
