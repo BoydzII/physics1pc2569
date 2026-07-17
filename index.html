@@ -1,0 +1,2456 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PhysiQuest — แรงและการเคลื่อนที่ ม.4</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700;800&family=Sarabun:wght@400;500;600;700&display=swap');
+
+:root{
+  --bg:#0b1120; --bg2:#0f172a; --card:#16213b; --card2:#1c2a4a;
+  --line:rgba(148,163,255,.14);
+  --txt:#e6ecff; --muted:#93a3c8;
+  --acc:#6366f1; --acc2:#22d3ee; --gold:#fbbf24;
+  --ok:#34d399; --bad:#f87171;
+  --grad:linear-gradient(135deg,#6366f1,#22d3ee);
+  --grad-gold:linear-gradient(135deg,#f59e0b,#fbbf24);
+  --r:18px; --shadow:0 10px 40px rgba(0,0,0,.35);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  font-family:'Sarabun',sans-serif; background:var(--bg); color:var(--txt);
+  min-height:100vh; overflow-x:hidden; line-height:1.65;
+}
+h1,h2,h3,h4,.btn,.nav-item,.chip{font-family:'Prompt',sans-serif}
+
+/* ===== animated background ===== */
+.bg-orbs{position:fixed;inset:0;z-index:-1;overflow:hidden;background:
+  radial-gradient(1200px 600px at 80% -10%,rgba(99,102,241,.18),transparent 60%),
+  radial-gradient(900px 500px at -10% 110%,rgba(34,211,238,.12),transparent 60%),var(--bg)}
+.orb{position:absolute;border-radius:50%;filter:blur(60px);opacity:.35;animation:drift 18s ease-in-out infinite alternate}
+.orb.o1{width:340px;height:340px;background:#6366f1;top:8%;left:70%}
+.orb.o2{width:260px;height:260px;background:#22d3ee;top:60%;left:8%;animation-delay:-6s}
+.orb.o3{width:200px;height:200px;background:#a855f7;top:75%;left:75%;animation-delay:-12s}
+@keyframes drift{from{transform:translate(0,0) scale(1)}to{transform:translate(60px,-50px) scale(1.15)}}
+
+/* ===== layout ===== */
+.app{display:flex;min-height:100vh}
+.sidebar{
+  width:250px;flex-shrink:0;position:sticky;top:0;height:100vh;
+  background:rgba(15,23,42,.75);backdrop-filter:blur(14px);
+  border-right:1px solid var(--line);display:flex;flex-direction:column;
+  padding:22px 14px;gap:6px;z-index:50;
+}
+.logo{display:flex;align-items:center;gap:10px;padding:4px 10px 18px}
+.logo .ic{width:44px;height:44px;border-radius:14px;background:var(--grad);display:grid;place-items:center;font-size:24px;box-shadow:0 6px 18px rgba(99,102,241,.45);animation:bob 3s ease-in-out infinite}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+.logo h1{font-size:19px;font-weight:800;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.logo small{display:block;color:var(--muted);font-size:11px;font-weight:500}
+.nav-item{
+  display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:14px;
+  color:var(--muted);cursor:pointer;font-weight:600;font-size:15px;border:1px solid transparent;
+  transition:.22s;user-select:none;
+}
+.nav-item:hover{color:var(--txt);background:rgba(99,102,241,.1)}
+.nav-item.active{color:#fff;background:linear-gradient(135deg,rgba(99,102,241,.35),rgba(34,211,238,.18));border-color:rgba(99,102,241,.5);box-shadow:0 4px 16px rgba(99,102,241,.25)}
+.nav-item .em{font-size:20px;width:26px;text-align:center}
+.xp-box{margin-top:auto;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px}
+.xp-box .lv{display:flex;justify-content:space-between;align-items:center;font-size:13px;margin-bottom:8px}
+.xp-box .lv b{color:var(--gold);font-family:'Prompt'}
+.xp-bar{height:10px;border-radius:99px;background:#0b1120;overflow:hidden}
+.xp-bar i{display:block;height:100%;border-radius:99px;background:var(--grad-gold);width:0%;transition:width .6s cubic-bezier(.22,1,.36,1)}
+.xp-box .xp-num{font-size:11px;color:var(--muted);margin-top:6px;text-align:right}
+
+.main{flex:1;padding:28px clamp(16px,4vw,48px) 90px;max-width:1100px;margin:0 auto;width:100%}
+
+/* mobile topbar */
+.topbar{display:none;position:sticky;top:0;z-index:60;background:rgba(11,17,32,.85);backdrop-filter:blur(12px);border-bottom:1px solid var(--line);padding:10px 14px;align-items:center;gap:10px}
+.topbar .burger{font-size:22px;background:none;border:none;color:var(--txt);cursor:pointer}
+.topbar h1{font-size:17px;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+@media(max-width:820px){
+  .sidebar{position:fixed;left:-270px;transition:left .3s;box-shadow:var(--shadow)}
+  .sidebar.open{left:0}
+  .topbar{display:flex}
+  .main{padding-top:18px}
+}
+
+/* ===== pages ===== */
+.page{display:none}
+.page.active{display:block;animation:fadeUp .45s cubic-bezier(.22,1,.36,1)}
+@keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+
+.page-head{margin-bottom:26px}
+.page-head h2{font-size:clamp(24px,4vw,32px);font-weight:800}
+.page-head h2 .hl{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.page-head p{color:var(--muted);margin-top:4px}
+
+/* ===== cards & buttons ===== */
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:22px;box-shadow:0 4px 24px rgba(0,0,0,.2)}
+.btn{
+  display:inline-flex;align-items:center;gap:8px;padding:11px 22px;border-radius:14px;border:none;
+  font-weight:700;font-size:15px;cursor:pointer;transition:.2s;color:#fff;background:var(--grad);
+  box-shadow:0 6px 18px rgba(99,102,241,.35);
+}
+.btn:hover{transform:translateY(-2px);box-shadow:0 10px 26px rgba(99,102,241,.5)}
+.btn:active{transform:translateY(0)}
+.btn.ghost{background:transparent;border:1.5px solid var(--acc);color:#a5b4fc;box-shadow:none}
+.btn.ghost:hover{background:rgba(99,102,241,.12)}
+.btn.gold{background:var(--grad-gold);box-shadow:0 6px 18px rgba(251,191,36,.3)}
+.btn.sm{padding:8px 16px;font-size:13px;border-radius:11px}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none}
+
+.chip{
+  display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:99px;cursor:pointer;
+  background:var(--card);border:1.5px solid var(--line);color:var(--muted);font-weight:600;font-size:14px;transition:.2s;user-select:none;
+}
+.chip:hover{border-color:var(--acc);color:var(--txt)}
+.chip.active{background:linear-gradient(135deg,rgba(99,102,241,.4),rgba(34,211,238,.25));border-color:var(--acc);color:#fff}
+.chip-row{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:22px}
+
+/* ===== HOME ===== */
+.hero{
+  position:relative;border-radius:24px;padding:clamp(24px,5vw,44px);overflow:hidden;
+  background:linear-gradient(135deg,rgba(99,102,241,.28),rgba(34,211,238,.14)),var(--card);
+  border:1px solid rgba(99,102,241,.35);margin-bottom:26px;
+  display:flex;align-items:center;gap:24px;flex-wrap:wrap;
+}
+.hero .rocket{font-size:clamp(60px,9vw,96px);animation:bob 3.4s ease-in-out infinite;filter:drop-shadow(0 10px 24px rgba(34,211,238,.35))}
+.hero h2{font-size:clamp(24px,4.5vw,38px);font-weight:800;line-height:1.25}
+.hero h2 .hl{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero p{color:var(--muted);margin:8px 0 18px;max-width:520px}
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:26px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;display:flex;align-items:center;gap:12px;transition:.25s}
+.stat:hover{transform:translateY(-3px);border-color:rgba(99,102,241,.5)}
+.stat .em{font-size:28px}
+.stat b{font-size:20px;font-family:'Prompt'}
+.stat small{color:var(--muted);display:block;font-size:12px}
+.ring-wrap{display:flex;align-items:center;gap:8px}
+.ring{transform:rotate(-90deg)}
+.ring .track{stroke:rgba(148,163,255,.15)}
+.ring .fill{stroke:url(#ringGrad);stroke-linecap:round;transition:stroke-dashoffset 1s cubic-bezier(.22,1,.36,1)}
+.ring-label{position:absolute;inset:0;display:grid;place-items:center;font-family:'Prompt';font-weight:800;font-size:22px}
+
+.home-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px}
+.mode-card{
+  background:var(--card);border:1px solid var(--line);border-radius:20px;padding:22px;cursor:pointer;
+  transition:.25s;position:relative;overflow:hidden;
+}
+.mode-card::before{content:'';position:absolute;inset:0;background:var(--grad);opacity:0;transition:.25s}
+.mode-card:hover{transform:translateY(-5px);border-color:rgba(99,102,241,.55);box-shadow:0 14px 34px rgba(99,102,241,.25)}
+.mode-card:hover::before{opacity:.08}
+.mode-card .em{font-size:36px;display:block;margin-bottom:10px}
+.mode-card h3{font-size:18px;margin-bottom:4px}
+.mode-card p{color:var(--muted);font-size:13.5px}
+.mode-card .go{margin-top:12px;font-size:13px;font-weight:700;color:var(--acc2)}
+
+/* ===== LESSONS ===== */
+.lesson-body{display:none}
+.lesson-body.active{display:block;animation:fadeUp .4s}
+.lesson-body h3{font-size:22px;margin:26px 0 10px;display:flex;align-items:center;gap:10px}
+.lesson-body h3::before{content:'';width:5px;height:24px;border-radius:3px;background:var(--grad)}
+.lesson-body p, .lesson-body li{color:#c7d2ee;font-size:15.5px}
+.lesson-body ul,.lesson-body ol{padding-left:24px;margin:8px 0}
+.lesson-body li{margin:5px 0}
+.lesson-body b{color:#fff}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:12px 0}
+@media(max-width:640px){.two-col{grid-template-columns:1fr}}
+
+.formula-box{
+  margin:16px 0;padding:18px 22px;border-radius:16px;text-align:center;
+  background:linear-gradient(135deg,rgba(99,102,241,.16),rgba(34,211,238,.1));
+  border:1px solid rgba(99,102,241,.4);
+  font-size:clamp(18px,3vw,23px);font-family:'Prompt';font-weight:600;color:#e0e7ff;
+}
+.formula-box small{display:block;font-family:'Sarabun';font-weight:400;font-size:13px;color:var(--muted);margin-top:8px}
+.frac{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;line-height:1.15;margin:0 3px;font-size:.9em}
+.frac>span:first-child{border-bottom:1.5px solid currentColor;padding:0 5px}
+var{font-style:italic;font-family:'Prompt';color:#a5b4fc}
+
+.key-point{
+  margin:14px 0;padding:14px 18px;border-radius:14px;background:rgba(251,191,36,.08);
+  border-left:4px solid var(--gold);color:#fde68a;font-size:15px;
+}
+.key-point b{color:var(--gold)}
+.compare-table{width:100%;border-collapse:collapse;margin:12px 0;font-size:14.5px}
+.compare-table th{background:rgba(99,102,241,.25);padding:10px;font-family:'Prompt'}
+.compare-table td{padding:10px;border-bottom:1px solid var(--line);color:#c7d2ee}
+.compare-table td:first-child{font-weight:600;color:#fff}
+.compare-table tr:hover td{background:rgba(99,102,241,.06)}
+
+details.example{
+  margin:14px 0;border-radius:16px;border:1px solid var(--line);background:var(--card2);overflow:hidden;
+}
+details.example summary{
+  padding:15px 20px;cursor:pointer;font-weight:700;font-family:'Prompt';color:#a5b4fc;list-style:none;
+  display:flex;align-items:center;gap:10px;transition:.2s;
+}
+details.example summary::before{content:'📐'}
+details.example summary::after{content:'▾';margin-left:auto;transition:.25s}
+details.example[open] summary::after{transform:rotate(180deg)}
+details.example summary:hover{background:rgba(99,102,241,.1)}
+details.example .sol{padding:4px 20px 18px;border-top:1px dashed var(--line)}
+details.example .ans{margin-top:10px;padding:10px 14px;border-radius:10px;background:rgba(52,211,153,.12);border:1px solid rgba(52,211,153,.35);color:#6ee7b7;font-weight:700}
+
+.quickcheck{margin:22px 0;padding:18px 20px;border-radius:16px;background:linear-gradient(135deg,rgba(168,85,247,.12),rgba(99,102,241,.1));border:1px solid rgba(168,85,247,.4)}
+.quickcheck .qc-q{font-weight:700;font-family:'Prompt';margin-bottom:12px;color:#e9d5ff}
+.qc-opts{display:flex;flex-wrap:wrap;gap:10px}
+.qc-opts button{
+  padding:9px 18px;border-radius:12px;border:1.5px solid var(--line);background:var(--card);
+  color:var(--txt);font-family:'Sarabun';font-size:14.5px;font-weight:600;cursor:pointer;transition:.2s;
+}
+.qc-opts button:hover{border-color:var(--acc)}
+.qc-opts button.right{background:rgba(52,211,153,.2);border-color:var(--ok);color:#6ee7b7}
+.qc-opts button.wrong{background:rgba(248,113,113,.15);border-color:var(--bad);color:#fca5a5;animation:shake .35s}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+.qc-fb{margin-top:10px;font-weight:700;font-size:14px;min-height:20px}
+
+.read-done{margin:26px 0 6px;text-align:center}
+.sim-link{display:inline-flex;align-items:center;gap:6px;color:var(--acc2);font-weight:700;cursor:pointer;font-size:14px;text-decoration:none}
+.sim-link:hover{text-decoration:underline}
+
+/* ===== SIMULATIONS ===== */
+.sim-panel{margin-bottom:20px}
+.sim-panel h3{font-size:20px;display:flex;align-items:center;gap:10px;margin-bottom:4px}
+.sim-panel .desc{color:var(--muted);font-size:14px;margin-bottom:14px}
+.sim-stage{background:#0a0f1e;border-radius:14px;border:1px solid var(--line);width:100%;display:block}
+.sim-controls{display:flex;flex-wrap:wrap;gap:16px;align-items:center;margin-top:14px}
+.ctl{display:flex;flex-direction:column;gap:4px;min-width:160px;flex:1}
+.ctl label{font-size:13px;color:var(--muted);font-weight:600;display:flex;justify-content:space-between}
+.ctl label output{color:var(--acc2);font-family:'Prompt';font-weight:700}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:8px;border-radius:99px;background:#0b1120;outline:none;border:1px solid var(--line)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--grad);cursor:pointer;box-shadow:0 2px 10px rgba(99,102,241,.6);border:2px solid #fff}
+select.sel{background:var(--card2);color:var(--txt);border:1.5px solid var(--line);border-radius:12px;padding:9px 14px;font-family:'Sarabun';font-size:14px;font-weight:600;cursor:pointer}
+.readouts{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
+.readout{background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:8px 16px;font-size:13px;color:var(--muted)}
+.readout b{color:var(--acc2);font-family:'Prompt';font-size:16px;display:block}
+
+/* ===== QUIZ ===== */
+.level-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}
+.level-card{border-radius:20px;padding:24px;cursor:pointer;border:1.5px solid var(--line);background:var(--card);transition:.25s;position:relative}
+.level-card:hover{transform:translateY(-5px)}
+.level-card.easy:hover{border-color:var(--ok);box-shadow:0 12px 30px rgba(52,211,153,.2)}
+.level-card.med:hover{border-color:var(--gold);box-shadow:0 12px 30px rgba(251,191,36,.2)}
+.level-card.hard:hover{border-color:var(--bad);box-shadow:0 12px 30px rgba(248,113,113,.2)}
+.level-card .em{font-size:38px}
+.level-card h3{font-size:20px;margin:8px 0 4px}
+.level-card p{color:var(--muted);font-size:13.5px}
+.level-card .best{margin-top:12px;font-size:13px;font-weight:700;color:var(--gold)}
+.q-progress{height:10px;border-radius:99px;background:#0b1120;border:1px solid var(--line);overflow:hidden;margin:14px 0 22px}
+.q-progress i{display:block;height:100%;background:var(--grad);border-radius:99px;transition:width .4s}
+.q-num{font-size:13px;color:var(--muted);font-weight:600}
+.q-text{font-size:clamp(17px,2.6vw,21px);font-weight:700;font-family:'Prompt';margin:10px 0 20px;line-height:1.5}
+.q-opts{display:grid;gap:12px}
+.q-opt{
+  text-align:left;padding:15px 18px;border-radius:14px;border:1.5px solid var(--line);
+  background:var(--card2);color:var(--txt);font-family:'Sarabun';font-size:15.5px;font-weight:600;
+  cursor:pointer;transition:.2s;display:flex;align-items:center;gap:12px;
+}
+.q-opt .abc{width:30px;height:30px;flex-shrink:0;border-radius:9px;background:rgba(99,102,241,.25);display:grid;place-items:center;font-family:'Prompt';font-weight:700;color:#a5b4fc;font-size:14px}
+.q-opt:hover:not(:disabled){border-color:var(--acc);transform:translateX(4px)}
+.q-opt.right{border-color:var(--ok);background:rgba(52,211,153,.14)}
+.q-opt.right .abc{background:var(--ok);color:#052e21}
+.q-opt.wrong{border-color:var(--bad);background:rgba(248,113,113,.12);animation:shake .35s}
+.q-opt.wrong .abc{background:var(--bad);color:#3d0a0a}
+.q-opt:disabled{cursor:default;opacity:.85}
+.q-explain{margin-top:16px;padding:14px 18px;border-radius:14px;background:rgba(34,211,238,.08);border:1px solid rgba(34,211,238,.35);color:#a5f3fc;font-size:14.5px;display:none}
+.q-explain.show{display:block;animation:fadeUp .35s}
+.q-next-row{margin-top:18px;display:flex;justify-content:flex-end}
+
+.result-box{text-align:center;padding:16px 0}
+.result-box .big{font-size:70px;animation:pop .5s cubic-bezier(.22,1.6,.36,1)}
+@keyframes pop{from{transform:scale(.3);opacity:0}to{transform:scale(1);opacity:1}}
+.result-box h3{font-size:26px;margin:8px 0}
+.result-box .score{font-size:48px;font-family:'Prompt';font-weight:800;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.stars{font-size:34px;letter-spacing:6px;margin:10px 0}
+.result-box p{color:var(--muted)}
+.result-actions{display:flex;gap:12px;justify-content:center;margin-top:20px;flex-wrap:wrap}
+
+/* ===== FORMULAS PAGE ===== */
+.fx-group{margin-bottom:20px}
+.fx-group h3{font-size:18px;margin-bottom:10px;color:#a5b4fc}
+.fx-table{width:100%;border-collapse:collapse;font-size:14.5px}
+.fx-table td{padding:11px 14px;border-bottom:1px solid var(--line)}
+.fx-table td:first-child{font-family:'Prompt';font-size:16px;color:#e0e7ff;white-space:nowrap}
+.fx-table td:last-child{color:var(--muted)}
+
+/* ===== BADGES ===== */
+.badge-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px}
+.badge{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:20px;text-align:center;transition:.25s;filter:grayscale(1);opacity:.45}
+.badge.earned{filter:none;opacity:1;border-color:rgba(251,191,36,.5);box-shadow:0 8px 24px rgba(251,191,36,.15)}
+.badge.earned:hover{transform:translateY(-4px) rotate(-1deg)}
+.badge .em{font-size:44px;display:block;margin-bottom:8px}
+.badge.earned .em{animation:bob 3s ease-in-out infinite}
+.badge h4{font-size:16px}
+.badge p{font-size:12.5px;color:var(--muted);margin-top:4px}
+
+/* ===== toast & confetti ===== */
+#toasts{position:fixed;bottom:22px;right:22px;z-index:999;display:flex;flex-direction:column;gap:10px}
+.toast{
+  background:var(--card2);border:1px solid rgba(99,102,241,.5);border-radius:14px;padding:13px 20px;
+  font-weight:700;font-family:'Prompt';font-size:14px;box-shadow:var(--shadow);
+  display:flex;align-items:center;gap:10px;animation:toastIn .4s cubic-bezier(.22,1.4,.36,1);
+}
+.toast.gold{border-color:var(--gold);color:#fde68a}
+@keyframes toastIn{from{transform:translateX(120%);opacity:0}to{transform:none;opacity:1}}
+.toast.out{transition:.4s;transform:translateX(120%);opacity:0}
+#confettiCv{position:fixed;inset:0;z-index:998;pointer-events:none}
+
+/* ===== login & leaderboard & FBD ===== */
+.login-box{margin-top:10px}
+.user-chip{display:flex;gap:10px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:9px 12px}
+.user-chip img{width:34px;height:34px;border-radius:50%;border:2px solid var(--acc)}
+.user-chip .un{font-size:13px;font-weight:700;font-family:'Prompt';line-height:1.2;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.user-chip .out{font-size:11px;color:var(--muted);cursor:pointer}
+.user-chip .out:hover{color:var(--bad)}
+.q-opt.selected{border-color:var(--acc2);background:rgba(34,211,238,.14)}
+.q-opt.selected .abc{background:var(--acc2);color:#062a30}
+.lb-row td{vertical-align:middle}
+.lb-row img{width:28px;height:28px;border-radius:50%;vertical-align:middle;margin-right:8px}
+.setup-code{background:#0a0f1e;border:1px solid var(--line);border-radius:10px;padding:12px;font-family:Consolas,monospace;font-size:12px;color:#a5f3fc;white-space:pre;overflow-x:auto;margin:10px 0}
+
+::-webkit-scrollbar{width:9px;height:9px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:#2a3a63;border-radius:99px}
+</style>
+</head>
+<body>
+<div class="bg-orbs"><div class="orb o1"></div><div class="orb o2"></div><div class="orb o3"></div></div>
+<svg width="0" height="0" style="position:absolute"><defs>
+<linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1">
+<stop offset="0%" stop-color="#6366f1"/><stop offset="100%" stop-color="#22d3ee"/>
+</linearGradient></defs></svg>
+
+<div class="topbar">
+  <button class="burger" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰</button>
+  <h1>⚛️ PhysiQuest — แรงและการเคลื่อนที่</h1>
+</div>
+
+<div class="app">
+<aside class="sidebar">
+  <div class="logo">
+    <div class="ic">⚛️</div>
+    <div><h1>PhysiQuest</h1><small>ฟิสิกส์ ม.4 · แรงและการเคลื่อนที่</small></div>
+  </div>
+  <div class="nav-item active" data-page="home"><span class="em">🏠</span> หน้าหลัก</div>
+  <div class="nav-item" data-page="lessons"><span class="em">📚</span> บทเรียน</div>
+  <div class="nav-item" data-page="sims"><span class="em">🧪</span> แบบจำลอง</div>
+  <div class="nav-item" data-page="quiz"><span class="em">📝</span> แบบทดสอบ</div>
+  <div class="nav-item" data-page="fbd"><span class="em">🎯</span> ฝึก FBD</div>
+  <div class="nav-item" data-page="formulas"><span class="em">📋</span> สรุปสูตร</div>
+  <div class="nav-item" data-page="badges"><span class="em">🏆</span> ความสำเร็จ</div>
+  <div class="nav-item" data-page="stats"><span class="em">🌍</span> สถิติรวม</div>
+  <div class="login-box" id="loginBox">
+    <button class="btn sm" style="width:100%;justify-content:center" onclick="cloudLogin()">🔑 ล็อกอินด้วย Google</button>
+  </div>
+  <div class="xp-box">
+    <div class="lv"><span>เลเวล <b id="lvNum">1</b></span><b id="lvName">มือใหม่</b></div>
+    <div class="xp-bar"><i id="xpFill"></i></div>
+    <div class="xp-num"><span id="xpNow">0</span> XP</div>
+  </div>
+</aside>
+
+<main class="main">
+
+<!-- ============ HOME ============ -->
+<section class="page active" id="page-home">
+  <div class="hero">
+    <div class="rocket">🚀</div>
+    <div style="flex:1;min-width:250px">
+      <h2>ยินดีต้อนรับสู่ <span class="hl">PhysiQuest</span></h2>
+      <p>ผจญภัยในโลกของ <b>แรงและการเคลื่อนที่</b> — เรียนรู้ผ่านบทเรียนกระชับ แบบจำลองโต้ตอบ และแบบทดสอบ 3 ระดับ สะสม XP ปลดล็อกเหรียญรางวัลไปพร้อมกัน!</p>
+      <button class="btn" onclick="showPage('lessons')">🎒 เริ่มเรียนเลย</button>
+      <button class="btn ghost" onclick="showPage('sims')" style="margin-left:8px">🧪 เล่นแบบจำลอง</button>
+    </div>
+    <div style="position:relative;width:130px;height:130px">
+      <svg class="ring" width="130" height="130">
+        <circle class="track" cx="65" cy="65" r="56" fill="none" stroke-width="12"/>
+        <circle class="fill" id="ringFill" cx="65" cy="65" r="56" fill="none" stroke-width="12"
+          stroke-dasharray="351.86" stroke-dashoffset="351.86"/>
+      </svg>
+      <div class="ring-label"><span id="ringPct">0%</span></div>
+    </div>
+  </div>
+
+  <div class="stat-grid">
+    <div class="stat"><span class="em">📖</span><div><b id="stChap">0/8</b><small>บทเรียนที่อ่านจบ</small></div></div>
+    <div class="stat"><span class="em">🧪</span><div><b id="stSim">0/6</b><small>แบบจำลองที่ทดลอง</small></div></div>
+    <div class="stat"><span class="em">📝</span><div><b id="stQuiz">0/3</b><small>ระดับที่ผ่าน (≥80%)</small></div></div>
+    <div class="stat"><span class="em">🏆</span><div><b id="stBadge">0/6</b><small>เหรียญรางวัล</small></div></div>
+  </div>
+
+  <h3 style="font-family:'Prompt';font-size:20px;margin-bottom:14px">🗺️ เลือกโหมดการเรียนรู้</h3>
+  <div class="home-grid">
+    <div class="mode-card" onclick="showPage('lessons')">
+      <span class="em">📚</span><h3>บทเรียน 8 บท</h3>
+      <p>ครบทุกหัวข้อตามหนังสือเรียน สสวท. (2.1–2.7 และ 3.1–3.6) พร้อมตัวอย่างโจทย์เฉลยละเอียด</p>
+      <div class="go">เริ่มอ่าน →</div>
+    </div>
+    <div class="mode-card" onclick="showPage('sims')">
+      <span class="em">🧪</span><h3>แบบจำลอง 6 ตัว</h3>
+      <p>ทดลองปรับค่าแรง มวล ความเร่ง แล้วดูผลแบบเรียลไทม์ เห็นภาพ เข้าใจจริง</p>
+      <div class="go">ทดลองเลย →</div>
+    </div>
+    <div class="mode-card" onclick="showPage('quiz')">
+      <span class="em">📝</span><h3>แบบทดสอบ 3 ระดับ</h3>
+      <p>ง่าย · ปานกลาง · ยาก คลัง 40 ข้อ สุ่มครั้งละ 10 พร้อมเฉลยอธิบายทุกข้อ!</p>
+      <div class="go">ท้าทายตัวเอง →</div>
+    </div>
+    <div class="mode-card" onclick="showPage('formulas')">
+      <span class="em">📋</span><h3>สรุปสูตรฉบับพกพา</h3>
+      <p>รวมทุกสูตรสำคัญไว้ในหน้าเดียว ทบทวนก่อนสอบสะดวกสุด ๆ</p>
+      <div class="go">เปิดดู →</div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:24px;font-size:14px">
+    📖 <b>อ้างอิงและแหล่งเรียนรู้เพิ่มเติม:</b> เนื้อหาอิงหนังสือเรียนรายวิชาเพิ่มเติมวิทยาศาสตร์และเทคโนโลยี <b>ฟิสิกส์ เล่ม 1 (ฉบับปรับปรุง) สสวท.</b> บทที่ 2 การเคลื่อนที่แนวตรง และบทที่ 3 แรงและกฎการเคลื่อนที่ ·
+    ดูคลิปการสอนประกอบทุกหัวข้อได้ที่ <a href="https://proj14.ipst.ac.th/m4-6-physics/m4-phys-book1/" target="_blank" rel="noopener" style="color:var(--acc2);font-weight:700">Project 14 สสวท. — ฟิสิกส์ ม.4 เล่ม 1 ↗</a>
+  </div>
+</section>
+
+<!-- ============ LESSONS ============ -->
+<section class="page" id="page-lessons">
+  <div class="page-head"><h2>📚 <span class="hl">บทเรียน</span></h2><p>อิงหนังสือเรียนรายวิชาเพิ่มเติมวิทยาศาสตร์ฯ <b>ฟิสิกส์ เล่ม 1 (ฉบับปรับปรุง) สสวท.</b> บทที่ 2–3 — ตัวเลขในวงเล็บคือหัวข้อในหนังสือเรียน อ่านจบแล้วกดปุ่มท้ายบทรับ XP!</p></div>
+  <div class="chip-row" id="chapChips">
+    <div class="chip active" data-chap="1">1️⃣ ปริมาณการเคลื่อนที่ (2.1–2.4)</div>
+    <div class="chip" data-chap="2">2️⃣ กราฟและสมการ (2.5–2.6)</div>
+    <div class="chip" data-chap="3">3️⃣ การตกแบบเสรี (2.7)</div>
+    <div class="chip" data-chap="4">4️⃣ แรง FBD และแรงลัพธ์ (3.1–3.2)</div>
+    <div class="chip" data-chap="5">5️⃣ กฎการเคลื่อนที่ของนิวตัน (3.3)</div>
+    <div class="chip" data-chap="6">6️⃣ แรงเสียดทานและสมดุล (3.4)</div>
+    <div class="chip" data-chap="7">7️⃣ แรงดึงดูดระหว่างมวล (3.5)</div>
+    <div class="chip" data-chap="8">8️⃣ การประยุกต์ใช้กฎนิวตัน (3.6)</div>
+  </div>
+
+  <!-- ---- บทที่ 1 ---- -->
+  <div class="card lesson-body active" id="chap-1">
+    <h3>บทที่ 1 · ปริมาณที่เกี่ยวข้องกับการเคลื่อนที่</h3>
+    <p>ก่อนจะเข้าใจ "แรง" เราต้องอธิบาย "การเคลื่อนที่" ให้ได้ก่อน ฟิสิกส์ใช้ปริมาณสำคัญ 4 ตัว ได้แก่ <b>ระยะทาง การกระจัด ความเร็ว และความเร่ง</b></p>
+
+    <h3>ระยะทาง vs การกระจัด</h3>
+    <table class="compare-table">
+      <tr><th></th><th>ระยะทาง (distance)</th><th>การกระจัด (displacement)</th></tr>
+      <tr><td>ความหมาย</td><td>ความยาวเส้นทางที่เคลื่อนที่จริงทั้งหมด</td><td>เส้นตรงจากจุดเริ่มต้นไปจุดสุดท้าย พร้อมทิศทาง</td></tr>
+      <tr><td>ชนิดปริมาณ</td><td>สเกลาร์ (มีแต่ขนาด)</td><td>เวกเตอร์ (มีขนาดและทิศทาง)</td></tr>
+      <tr><td>หน่วย</td><td>เมตร (m)</td><td>เมตร (m)</td></tr>
+    </table>
+    <div class="key-point">💡 <b>จุดสังเกต:</b> ถ้าเดินวนกลับมาที่เดิม ระยะทาง ≠ 0 แต่ <b>การกระจัด = 0</b> เสมอ!</div>
+
+    <h3>อัตราเร็ว vs ความเร็ว</h3>
+    <div class="two-col">
+      <div class="formula-box">อัตราเร็วเฉลี่ย = <span class="frac"><span>ระยะทาง</span><span>เวลา</span></span><small>สเกลาร์ · หน่วย m/s</small></div>
+      <div class="formula-box"><var>v</var> = <span class="frac"><span>Δ<var>x</var></span><span>Δ<var>t</var></span></span><small>ความเร็วเฉลี่ย = การกระจัด ÷ เวลา (เวกเตอร์)</small></div>
+    </div>
+    <ul>
+      <li><b>อัตราเร็ว (speed)</b> — บอกแค่ว่า "เร็วแค่ไหน" เช่น มาตรวัดในรถยนต์</li>
+      <li><b>ความเร็ว (velocity)</b> — บอกทั้ง "เร็วแค่ไหน" และ "ไปทางไหน"</li>
+      <li>ค่า <b>ขณะหนึ่ง (instantaneous)</b> คือค่าที่จุดเวลาหนึ่ง ๆ ส่วนค่า <b>เฉลี่ย (average)</b> คิดตลอดช่วง</li>
+    </ul>
+
+    <h3>ความเร่ง (acceleration)</h3>
+    <div class="formula-box"><var>a</var> = <span class="frac"><span>Δ<var>v</var></span><span>Δ<var>t</var></span></span> = <span class="frac"><span><var>v</var> − <var>u</var></span><span><var>t</var></span></span><small><var>u</var> = ความเร็วต้น, <var>v</var> = ความเร็วปลาย · หน่วย m/s²</small></div>
+    <ul>
+      <li>ความเร่ง คือ อัตราการเปลี่ยนแปลง<b>ความเร็ว</b>ต่อหนึ่งหน่วยเวลา (เป็นเวกเตอร์)</li>
+      <li>ความเร่งเป็น <b>+</b> เมื่อเร็วขึ้นตามทิศการเคลื่อนที่ และเป็น <b>−</b> (หน่วง) เมื่อช้าลง</li>
+      <li>เลี้ยวโค้งด้วยอัตราเร็วคงตัวก็ถือว่า "มีความเร่ง" เพราะ<b>ทิศ</b>ของความเร็วเปลี่ยน!</li>
+    </ul>
+
+    <details class="example">
+      <summary>ตัวอย่างที่ 1.1 — เดิน 2 ทิศ</summary>
+      <div class="sol">
+        <p>น้องฟ้าเดินไปทางทิศตะวันออก 8 m แล้วเดินย้อนกลับทางทิศตะวันตก 3 m ใช้เวลารวม 10 s จงหาระยะทาง การกระจัด อัตราเร็วเฉลี่ย และความเร็วเฉลี่ย</p>
+        <p><b>วิธีทำ</b> ระยะทาง = 8 + 3 = <b>11 m</b> · การกระจัด = 8 − 3 = <b>5 m ทางทิศตะวันออก</b></p>
+        <p>อัตราเร็วเฉลี่ย = 11/10 = 1.1 m/s · ความเร็วเฉลี่ย = 5/10 = 0.5 m/s ทิศตะวันออก</p>
+        <div class="ans">✅ ระยะทาง 11 m, การกระจัด 5 m (ตะวันออก), อัตราเร็วเฉลี่ย 1.1 m/s, ความเร็วเฉลี่ย 0.5 m/s</div>
+      </div>
+    </details>
+    <details class="example">
+      <summary>ตัวอย่างที่ 1.2 — หาความเร่ง</summary>
+      <div class="sol">
+        <p>รถจักรยานยนต์เพิ่มความเร็วจาก 5 m/s เป็น 20 m/s ในเวลา 6 s จงหาความเร่งเฉลี่ย</p>
+        <p><b>วิธีทำ</b> a = (v − u)/t = (20 − 5)/6 = 15/6</p>
+        <div class="ans">✅ ความเร่งเฉลี่ย = 2.5 m/s² ทิศเดียวกับการเคลื่อนที่</div>
+      </div>
+    </details>
+
+    <div class="quickcheck" data-qc="qc1">
+      <div class="qc-q">❓ เช็กความเข้าใจ: วิ่งรอบสนามวงกลม 1 รอบพอดี กลับมาที่จุดเริ่มต้น การกระจัดมีค่าเท่าใด?</div>
+      <div class="qc-opts">
+        <button data-ok="0">เท่ากับเส้นรอบวง</button>
+        <button data-ok="1">ศูนย์</button>
+        <button data-ok="0">เท่ากับรัศมี</button>
+        <button data-ok="0">หาไม่ได้</button>
+      </div>
+      <div class="qc-fb"></div>
+    </div>
+    <p><a class="sim-link" onclick="showPage('sims');scrollToSim('simBox1')">🧪 ลองเล่นแบบจำลอง "รถเคลื่อนที่แนวตรง" ประกอบบทนี้ →</a></p>
+    <div class="read-done"><button class="btn gold" onclick="markRead(1)" id="readBtn1">✅ อ่านจบบทที่ 1 แล้ว (+15 XP)</button></div>
+  </div>
+
+  <!-- ---- บทที่ 2 ---- -->
+  <div class="card lesson-body" id="chap-2">
+    <h3>บทที่ 2 · กราฟการเคลื่อนที่และสมการจลนศาสตร์</h3>
+    <p>กราฟช่วยให้เรา "มองเห็น" การเคลื่อนที่ทั้งหมดในภาพเดียว มี 3 กราฟหลักที่ต้องอ่านให้เป็น</p>
+
+    <h3>อ่านกราฟให้เป็นใน 1 นาที</h3>
+    <table class="compare-table">
+      <tr><th>กราฟ</th><th>ความชัน (slope) บอก</th><th>พื้นที่ใต้กราฟบอก</th></tr>
+      <tr><td>ตำแหน่ง–เวลา (x-t)</td><td>ความเร็ว</td><td>—</td></tr>
+      <tr><td>ความเร็ว–เวลา (v-t)</td><td>ความเร่ง</td><td>การกระจัด</td></tr>
+      <tr><td>ความเร่ง–เวลา (a-t)</td><td>—</td><td>ความเร็วที่เปลี่ยนไป</td></tr>
+    </table>
+    <div class="key-point">💡 <b>ท่องให้ขึ้นใจ:</b> "ชัน x-t ได้ v · ชัน v-t ได้ a · พื้นที่ v-t ได้ s" — ออกสอบทุกปี!</div>
+    <ul>
+      <li>กราฟ x-t เป็น<b>เส้นตรงเอียง</b> → ความเร็วคงตัว · เป็น<b>เส้นโค้ง</b> → มีความเร่ง</li>
+      <li>กราฟ v-t <b>ขนานแกนเวลา</b> → a = 0 · <b>เส้นตรงเอียง</b> → ความเร่งคงตัว</li>
+      <li>พื้นที่ใต้กราฟ v-t ที่อยู่ใต้แกนเวลา คิดเป็นการกระจัดติดลบ (เคลื่อนที่ย้อนทิศ)</li>
+    </ul>
+
+    <h3>สมการการเคลื่อนที่แนวตรง (ความเร่งคงตัว)</h3>
+    <div class="two-col">
+      <div class="formula-box"><var>v</var> = <var>u</var> + <var>a</var><var>t</var><small>ไม่มี s</small></div>
+      <div class="formula-box"><var>s</var> = <var>u</var><var>t</var> + ½<var>a</var><var>t</var>²<small>ไม่มี v</small></div>
+      <div class="formula-box"><var>v</var>² = <var>u</var>² + 2<var>a</var><var>s</var><small>ไม่มี t</small></div>
+      <div class="formula-box"><var>s</var> = <span class="frac"><span>(<var>u</var> + <var>v</var>)</span><span>2</span></span><var>t</var><small>ไม่มี a</small></div>
+    </div>
+    <div class="key-point">🧠 <b>เทคนิคเลือกสูตร:</b> โจทย์ให้อะไรมา–ถามอะไร แล้วเลือกสูตรที่ "ไม่มี" ตัวแปรที่โจทย์ไม่พูดถึง</div>
+
+    <details class="example">
+      <summary>ตัวอย่างที่ 2.1 — รถออกตัว</summary>
+      <div class="sol">
+        <p>รถยนต์เริ่มเคลื่อนที่จากหยุดนิ่ง (u = 0) ด้วยความเร่งคงตัว 2 m/s² จงหาความเร็วและระยะทางเมื่อเวลาผ่านไป 5 s</p>
+        <p><b>วิธีทำ</b> v = u + at = 0 + (2)(5) = 10 m/s</p>
+        <p>s = ut + ½at² = 0 + ½(2)(5²) = 25 m</p>
+        <div class="ans">✅ ความเร็ว 10 m/s และเคลื่อนที่ได้ 25 m</div>
+      </div>
+    </details>
+    <details class="example">
+      <summary>ตัวอย่างที่ 2.2 — เบรกรถ</summary>
+      <div class="sol">
+        <p>รถวิ่งด้วยความเร็ว 20 m/s เหยียบเบรกจนหยุดในระยะ 40 m จงหาความเร่ง (สม่ำเสมอ)</p>
+        <p><b>วิธีทำ</b> ใช้ v² = u² + 2as (ไม่มี t) → 0 = 20² + 2a(40)</p>
+        <p>0 = 400 + 80a → a = −400/80 = −5 m/s²</p>
+        <div class="ans">✅ ความเร่ง = −5 m/s² (เครื่องหมายลบ = ความหน่วง ทิศตรงข้ามการเคลื่อนที่)</div>
+      </div>
+    </details>
+    <details class="example">
+      <summary>ตัวอย่างที่ 2.3 — พื้นที่ใต้กราฟ v-t</summary>
+      <div class="sol">
+        <p>กราฟ v-t ของรถคันหนึ่ง: ความเร็วเพิ่มจาก 0 ถึง 20 m/s ใน 4 s แล้ววิ่งคงที่ต่ออีก 6 s จงหาระยะทางรวม</p>
+        <p><b>วิธีทำ</b> ช่วงแรก (สามเหลี่ยม) = ½ × 4 × 20 = 40 m</p>
+        <p>ช่วงหลัง (สี่เหลี่ยม) = 20 × 6 = 120 m</p>
+        <div class="ans">✅ ระยะทางรวม = 40 + 120 = 160 m</div>
+      </div>
+    </details>
+
+    <div class="quickcheck" data-qc="qc2">
+      <div class="qc-q">❓ เช็กความเข้าใจ: กราฟ v-t เป็นเส้นตรงขนานแกนเวลา แสดงว่าวัตถุ...</div>
+      <div class="qc-opts">
+        <button data-ok="0">หยุดนิ่ง</button>
+        <button data-ok="1">ความเร็วคงตัว (a = 0)</button>
+        <button data-ok="0">ความเร่งคงตัวไม่เป็นศูนย์</button>
+        <button data-ok="0">ความเร็วเพิ่มขึ้นเรื่อย ๆ</button>
+      </div>
+      <div class="qc-fb"></div>
+    </div>
+    <p><a class="sim-link" onclick="showPage('sims');scrollToSim('simBox1')">🧪 ปรับค่า u และ a ในแบบจำลอง แล้วดูกราฟวาดสด ๆ →</a></p>
+    <div class="read-done"><button class="btn gold" onclick="markRead(2)" id="readBtn2">✅ อ่านจบบทที่ 2 แล้ว (+15 XP)</button></div>
+  </div>
+
+  <!-- ---- บทที่ 3 ---- -->
+  <div class="card lesson-body" id="chap-3">
+    <h3>บทที่ 3 · การตกแบบเสรี (Free Fall)</h3>
+    <p>การตกแบบเสรี คือ การเคลื่อนที่ที่มี<b>แรงโน้มถ่วงกระทำเพียงแรงเดียว</b> (ไม่คิดแรงต้านอากาศ) วัตถุทุกชนิดจะตกด้วยความเร่งเท่ากันหมด ไม่ว่าหนักหรือเบา!</p>
+    <div class="formula-box"><var>g</var> ≈ 9.8 m/s² (โจทย์มักให้ใช้ 10 m/s²)<small>ความเร่งโน้มถ่วงที่ผิวโลก มีทิศ "ลง" เสมอ</small></div>
+
+    <h3>ใช้สมการเดิม แค่เปลี่ยน a เป็น g</h3>
+    <div class="two-col">
+      <div class="formula-box"><var>v</var> = <var>u</var> + <var>g</var><var>t</var></div>
+      <div class="formula-box"><var>s</var> = <var>u</var><var>t</var> + ½<var>g</var><var>t</var>²</div>
+    </div>
+    <ul>
+      <li><b>ปล่อยให้ตก:</b> u = 0 → v = gt และ s = ½gt²</li>
+      <li><b>ขว้างขึ้น:</b> กำหนดทิศขึ้นเป็นบวก จะได้ a = −g · ที่จุดสูงสุด <b>v = 0</b> (แต่ a ยังคงเป็น g!)</li>
+      <li>เวลาขาขึ้น = เวลาขาลง (ถ้าตกกลับถึงระดับเดิม) และอัตราเร็วขากลับเท่ากับตอนขว้าง</li>
+    </ul>
+    <div class="key-point">⚠️ <b>ระวังหลุม:</b> ที่จุดสูงสุด v = 0 จริง แต่ความเร่ง <b>ไม่เป็นศูนย์</b> — ยังเป็น g ทิศลงตลอดเวลา</div>
+
+    <details class="example">
+      <summary>ตัวอย่างที่ 3.1 — ปล่อยก้อนหินจากหน้าผา</summary>
+      <div class="sol">
+        <p>ปล่อยก้อนหินตกจากหน้าผาสูง 45 m (ให้ g = 10 m/s²) จงหาเวลาที่ใช้และความเร็วขณะกระทบพื้น</p>
+        <p><b>วิธีทำ</b> s = ½gt² → 45 = ½(10)t² → t² = 9 → t = 3 s</p>
+        <p>v = gt = 10 × 3 = 30 m/s</p>
+        <div class="ans">✅ ใช้เวลา 3 s กระทบพื้นด้วยความเร็ว 30 m/s</div>
+      </div>
+    </details>
+    <details class="example">
+      <summary>ตัวอย่างที่ 3.2 — โยนลูกบอลขึ้น</summary>
+      <div class="sol">
+        <p>โยนลูกบอลขึ้นในแนวดิ่งด้วยความเร็วต้น 20 m/s (g = 10 m/s²) หา (ก) เวลาถึงจุดสูงสุด (ข) ความสูงสูงสุด</p>
+        <p><b>วิธีทำ</b> (ก) ที่จุดสูงสุด v = 0 → 0 = 20 − 10t → t = 2 s</p>
+        <p>(ข) v² = u² − 2gs → 0 = 400 − 20s → s = 20 m</p>
+        <div class="ans">✅ ใช้เวลา 2 s ขึ้นสูงสุด 20 m</div>
+      </div>
+    </details>
+
+    <div class="quickcheck" data-qc="qc3">
+      <div class="qc-q">❓ เช็กความเข้าใจ: ปล่อยค้อนกับขนนกพร้อมกันบนดวงจันทร์ (ไม่มีอากาศ) อะไรถึงพื้นก่อน?</div>
+      <div class="qc-opts">
+        <button data-ok="0">ค้อน</button>
+        <button data-ok="0">ขนนก</button>
+        <button data-ok="1">ถึงพร้อมกัน</button>
+      </div>
+      <div class="qc-fb"></div>
+    </div>
+    <p><a class="sim-link" onclick="showPage('sims');scrollToSim('simBox2')">🧪 ลองปล่อยของบนดาวต่าง ๆ ในแบบจำลองการตกแบบเสรี →</a></p>
+    <div class="read-done"><button class="btn gold" onclick="markRead(3)" id="readBtn3">✅ อ่านจบบทที่ 3 แล้ว (+15 XP)</button></div>
+  </div>
+
+  <!-- ---- บทที่ 4 ---- -->
+  <div class="card lesson-body" id="chap-4">
+    <h3>บทที่ 4 · แรง แผนภาพวัตถุอิสระ และการหาแรงลัพธ์ (หัวข้อ 3.1–3.2)</h3>
+    <p><b>แรง (Force)</b> คือ สิ่งที่กระทำต่อวัตถุแล้วทำให้วัตถุ<b>เปลี่ยนสภาพการเคลื่อนที่</b> (เริ่มเคลื่อน หยุด เร็วขึ้น ช้าลง หรือเปลี่ยนทิศ) หรือเปลี่ยนรูปร่าง · แรงเป็น<b>ปริมาณเวกเตอร์</b> หน่วยคือ <b>นิวตัน (N)</b></p>
+
+    <h3>แรงบางชนิดที่ควรรู้จัก (3.1.3)</h3>
+    <table class="compare-table">
+      <tr><th>แรง</th><th>สัญลักษณ์</th><th>ทิศทาง</th></tr>
+      <tr><td>น้ำหนัก</td><td>W = mg</td><td>ดิ่งลงสู่ศูนย์กลางโลกเสมอ</td></tr>
+      <tr><td>แรงแนวฉาก</td><td>N</td><td>ตั้งฉากกับผิวสัมผัส พุ่งออกจากผิว</td></tr>
+      <tr><td>แรงตึงเชือก</td><td>T</td><td>อยู่ในแนวเส้นเชือก ทิศดึงออกจากวัตถุ</td></tr>
+      <tr><td>แรงเสียดทาน</td><td>f</td><td>ขนานผิวสัมผัส ต้านการเคลื่อนที่</td></tr>
+    </table>
+
+    <h3>แผนภาพวัตถุอิสระ (Free Body Diagram: FBD) (3.1.2)</h3>
+    <ul>
+      <li>วาดวัตถุที่สนใจเป็นจุดหรือกล่อง แล้วเขียน<b>ลูกศรแทนแรงทุกแรง</b>ที่กระทำต่อวัตถุนั้น (เฉพาะแรงที่กระทำ "ต่อวัตถุ" — ไม่รวมแรงที่วัตถุไปกระทำต่อสิ่งอื่น)</li>
+      <li>ความยาวลูกศรแทนขนาดแรง หัวลูกศรชี้ทิศของแรง</li>
+      <li>เลือกแกน x, y แตกแรง แล้วนำไปใช้กับกฎการเคลื่อนที่ต่อไป</li>
+    </ul>
+
+    <h3>การหาแรงลัพธ์ (3.2)</h3>
+    <p><b>แรงลัพธ์ (ΣF)</b> คือผลรวมแบบเวกเตอร์ของแรงทุกแรงที่กระทำต่อวัตถุ หาได้ 3 วิธี (ทุกวิธีให้ผลเหมือนกันเมื่อทำถูกขั้นตอน)</p>
+    <ol>
+      <li><b>วิธีเขียนเวกเตอร์แบบหางต่อหัว</b> — นำหางของแรงถัดไปมาต่อที่หัวลูกศรของแรงก่อนหน้า แรงลัพธ์คือเวกเตอร์ที่ลากจากหางของแรงแรกไปยังหัวของแรงสุดท้าย</li>
+      <li><b>วิธีสร้างรูปสี่เหลี่ยมด้านขนาน</b> — วางหางแรงสองแรงไว้จุดเดียวกัน แรงลัพธ์คือเส้นทแยงมุมของรูปสี่เหลี่ยมด้านขนาน</li>
+      <li><b>วิธีคำนวณ</b> — ตามลักษณะการทำมุมของแรง ดังนี้</li>
+    </ol>
+    <div class="two-col">
+      <div class="formula-box">แนวเดียวกัน: ΣF = F₁ ± F₂<small>ทิศเดียวกันบวก · ทิศตรงข้ามลบ (ทิศตามแรงที่มากกว่า)</small></div>
+      <div class="formula-box">ตั้งฉากกัน: ΣF = √(F₁² + F₂²)<small>พีทาโกรัส · tan α = F₂/F₁</small></div>
+    </div>
+    <div class="formula-box">ทำมุม θ ต่อกัน: ΣF = √(F₁² + F₂² + 2F₁F₂cos θ)<small>สูตรทั่วไป — แทน θ = 90° จะได้พีทาโกรัส, θ = 0° ได้ F₁+F₂, θ = 180° ได้ F₁−F₂</small></div>
+    <div class="key-point">💡 <b>เช็กเร็ว:</b> แรงลัพธ์ของแรงสองแรงมีค่าได้ระหว่าง |F₁ − F₂| (มุม 180°) ถึง F₁ + F₂ (มุม 0°) เท่านั้น</div>
+
+    <details class="example">
+      <summary>ตัวอย่างที่ 4.1 — แรงตั้งฉากกัน</summary>
+      <div class="sol">
+        <p>แรง 3 N และ 4 N กระทำต่อวัตถุเดียวกันในทิศตั้งฉากกัน จงหาขนาดและทิศของแรงลัพธ์</p>
+        <p><b>วิธีทำ</b> ΣF = √(3² + 4²) = √25 = 5 N</p>
+        <p>tan α = 4/3 → α ≈ 53° วัดจากแนวแรง 3 N</p>
+        <div class="ans">✅ แรงลัพธ์ = 5 N ทำมุมประมาณ 53° กับแนวแรง 3 N</div>
+      </div>
+    </details>
+    <details class="example">
+      <summary>ตัวอย่างที่ 4.2 — แรงทำมุม 60°</summary>
+      <div class="sol">
+        <p>แรงขนาด 10 N สองแรง กระทำต่อวัตถุโดยทำมุม 60° ต่อกัน จงหาขนาดแรงลัพธ์</p>
+        <p><b>วิธีทำ</b> ΣF = √(10² + 10² + 2(10)(10)cos 60°) = √(100 + 100 + 100) = √300</p>
+        <div class="ans">✅ แรงลัพธ์ = 10√3 ≈ 17.3 N (ทิศแบ่งครึ่งมุมระหว่างแรงพอดี เพราะสองแรงเท่ากัน)</div>
+      </div>
+    </details>
+
+    <div class="quickcheck" data-qc="qc4b">
+      <div class="qc-q">❓ เช็กความเข้าใจ: แรง 6 N และ 8 N กระทำต่อวัตถุในทิศตั้งฉากกัน แรงลัพธ์มีขนาดเท่าใด?</div>
+      <div class="qc-opts">
+        <button data-ok="0">2 N</button>
+        <button data-ok="1">10 N</button>
+        <button data-ok="0">14 N</button>
+        <button data-ok="0">48 N</button>
+      </div>
+      <div class="qc-fb"></div>
+    </div>
+    <p><a class="sim-link" onclick="showPage('sims');scrollToSim('simBox6')">🧪 ลองปรับมุมระหว่างแรงในแบบจำลองแรงลัพธ์ →</a></p>
+    <div class="read-done"><button class="btn gold" onclick="markRead(4)" id="readBtn4">✅ อ่านจบบทที่ 4 แล้ว (+15 XP)</button></div>
+  </div>
+
+  <!-- ---- บทที่ 5 ---- -->
+  <div class="card lesson-body" id="chap-5">
+    <h3>บทที่ 5 · มวล แรง และกฎการเคลื่อนที่ของนิวตัน (หัวข้อ 3.3)</h3>
+    <h3>มวลและความเฉื่อย (3.3.1)</h3>
+    <ul>
+      <li><b>ความเฉื่อย (inertia)</b> คือสมบัติของวัตถุที่ต้านการเปลี่ยนสภาพการเคลื่อนที่</li>
+      <li><b>มวล (mass)</b> เป็นปริมาณที่บอกระดับความเฉื่อย — วัตถุ<b>มวลมาก เฉื่อยมาก</b> เปลี่ยนสภาพการเคลื่อนที่ได้ยาก</li>
+      <li>มวลเป็นสเกลาร์ หน่วยกิโลกรัม (kg) และมีค่าเท่าเดิมทุกที่ในเอกภพ</li>
+    </ul>
+
+    <h3>กฎข้อที่ 1 — กฎความเฉื่อย (Law of Inertia)</h3>
+    <div class="formula-box">ถ้า Σ<var>F</var> = 0 → วัตถุหยุดนิ่ง หรือเคลื่อนที่ด้วยความเร็วคงตัว<small>วัตถุจะรักษาสภาพการเคลื่อนที่เดิม จนกว่าจะมีแรงลัพธ์มากระทำ</small></div>
+    <ul>
+      <li>วัตถุที่หยุดนิ่งจะหยุดนิ่งต่อไป วัตถุที่กำลังเคลื่อนที่จะเคลื่อนที่ด้วยความเร็วเดิมต่อไป ตราบใดที่แรงลัพธ์ยังเป็นศูนย์</li>
+      <li>ตัวอย่างในชีวิตจริง: รถเบรกกะทันหันแล้วตัวพุ่งไปข้างหน้า, สะบัดขวดซอสให้ซอสไหล, เหรียญบนกระดาษที่ถูกกระตุกออก</li>
+    </ul>
+
+    <h3>กฎข้อที่ 2 — กฎความเร่ง</h3>
+    <div class="formula-box">Σ<var>F</var> = <var>m</var><var>a</var><small>แรงลัพธ์ (N) = มวล (kg) × ความเร่ง (m/s²) · ทิศของ a เดียวกับทิศของ ΣF</small></div>
+    <ul>
+      <li>แรงลัพธ์มากขึ้น → ความเร่งมากขึ้น (แปรผันตรง)</li>
+      <li>มวลมากขึ้น (แรงเท่าเดิม) → ความเร่งน้อยลง (แปรผกผัน)</li>
+      <li><b>น้ำหนัก</b> คือแรงโน้มถ่วงที่โลกดึงดูดวัตถุ: <b>W = mg</b> — มวลไม่เปลี่ยนตามสถานที่ แต่น้ำหนักเปลี่ยน!</li>
+    </ul>
+
+    <h3>กฎข้อที่ 3 — กิริยา = ปฏิกิริยา</h3>
+    <div class="formula-box"><var>F</var><sub>A→B</sub> = −<var>F</var><sub>B→A</sub><small>แรงกิริยาและแรงปฏิกิริยา ขนาดเท่ากัน ทิศตรงข้าม กระทำต่อวัตถุ "คนละก้อน"</small></div>
+    <div class="key-point">⚠️ <b>ระวังหลุม:</b> แรงคู่กิริยา–ปฏิกิริยา<b>หักล้างกันไม่ได้</b> เพราะกระทำต่อวัตถุคนละก้อน! เช่น เท้าถีบพื้น (แรงกระทำต่อพื้น) ↔ พื้นดันเท้า (แรงกระทำต่อเรา) — เราจึงเดินหน้าได้</div>
+
+    <details class="example">
+      <summary>ตัวอย่างที่ 5.1 — หาความเร่งจากแรง</summary>
+      <div class="sol">
+        <p>ออกแรงผลักกล่องมวล 4 kg บนพื้นลื่น (ไม่มีแรงเสียดทาน) ด้วยแรง 20 N ในแนวระดับ จงหาความเร่ง</p>
+        <p><b>วิธีทำ</b> ΣF = ma → 20 = 4a → a = 5</p>
+        <div class="ans">✅ ความเร่ง = 5 m/s² ทิศเดียวกับแรงผลัก</div>
+      </div>
+    </details>
+    <details class="example">
+      <summary>ตัวอย่างที่ 5.2 — แรงสองแรงทิศตรงข้าม</summary>
+      <div class="sol">
+        <p>กล่องมวล 2 kg ถูกดึงไปทางขวาด้วยแรง 18 N และมีแรงเสียดทานต้าน 6 N จงหาความเร่ง</p>
+        <p><b>วิธีทำ</b> ΣF = 18 − 6 = 12 N → a = ΣF/m = 12/2 = 6</p>
+        <div class="ans">✅ ความเร่ง = 6 m/s² ไปทางขวา</div>
+      </div>
+    </details>
+    <details class="example">
+      <summary>ตัวอย่างที่ 5.3 — น้ำหนักบนโลกกับดวงจันทร์</summary>
+      <div class="sol">
+        <p>นักเรียนมวล 50 kg มีน้ำหนักเท่าใดบนโลก (g = 9.8 m/s²) และบนดวงจันทร์ (g = 1.6 m/s²)?</p>
+        <p><b>วิธีทำ</b> บนโลก W = mg = 50 × 9.8 = 490 N · บนดวงจันทร์ W = 50 × 1.6 = 80 N</p>
+        <div class="ans">✅ 490 N บนโลก, 80 N บนดวงจันทร์ — มวลยังคงเป็น 50 kg เท่าเดิมทั้งสองที่!</div>
+      </div>
+    </details>
+
+    <div class="quickcheck" data-qc="qc4">
+      <div class="qc-q">❓ เช็กความเข้าใจ: ถ้าแรงลัพธ์ที่กระทำต่อวัตถุเป็นศูนย์ วัตถุที่กำลังเคลื่อนที่จะ...</div>
+      <div class="qc-opts">
+        <button data-ok="0">ค่อย ๆ ช้าลงจนหยุด</button>
+        <button data-ok="1">เคลื่อนที่ต่อด้วยความเร็วคงตัว</button>
+        <button data-ok="0">หยุดทันที</button>
+        <button data-ok="0">เร็วขึ้นเรื่อย ๆ</button>
+      </div>
+      <div class="qc-fb"></div>
+    </div>
+    <p><a class="sim-link" onclick="showPage('sims');scrollToSim('simBox3')">🧪 ลองผลักกล่องในแบบจำลองกฎข้อที่ 2 →</a></p>
+    <div class="read-done"><button class="btn gold" onclick="markRead(5)" id="readBtn5">✅ อ่านจบบทที่ 5 แล้ว (+15 XP)</button></div>
+  </div>
+
+  <!-- ---- บทที่ 6 ---- -->
+  <div class="card lesson-body" id="chap-6">
+    <h3>บทที่ 6 · แรงเสียดทานและสมดุลกล (หัวข้อ 3.4)</h3>
+    <p><b>แรงเสียดทาน (friction)</b> คือแรงที่ผิวสัมผัสต้านการเคลื่อนที่ (หรือแนวโน้มการเคลื่อนที่) ของวัตถุ มีทิศ<b>ขนานผิวสัมผัส</b> และ<b>สวนทาง</b>กับการเคลื่อนที่เสมอ</p>
+
+    <h3>แรงเสียดทาน 2 ชนิด</h3>
+    <table class="compare-table">
+      <tr><th></th><th>สถิต (static, f<sub>s</sub>)</th><th>จลน์ (kinetic, f<sub>k</sub>)</th></tr>
+      <tr><td>เกิดเมื่อ</td><td>วัตถุยังไม่เคลื่อนที่</td><td>วัตถุกำลังเคลื่อนที่</td></tr>
+      <tr><td>ขนาด</td><td>ปรับตัวตามแรงที่มาดึง สูงสุด = μ<sub>s</sub>N</td><td>คงตัว = μ<sub>k</sub>N</td></tr>
+      <tr><td>เปรียบเทียบ</td><td colspan="2">โดยทั่วไป μ<sub>s</sub> &gt; μ<sub>k</sub> → เข็นให้เริ่มขยับยากกว่าเข็นให้เคลื่อนต่อ</td></tr>
+    </table>
+    <div class="two-col">
+      <div class="formula-box"><var>f</var><sub>s</sub> ≤ μ<sub>s</sub><var>N</var><small>แรงเสียดทานสถิต (ค่าสูงสุดคือ μ<sub>s</sub>N)</small></div>
+      <div class="formula-box"><var>f</var><sub>k</sub> = μ<sub>k</sub><var>N</var><small>แรงเสียดทานจลน์ · N = แรงแนวฉาก</small></div>
+    </div>
+    <ul>
+      <li>บนพื้นราบไม่มีแรงกดอื่น: N = mg</li>
+      <li>μ (สัมประสิทธิ์ความเสียดทาน) ไม่มีหน่วย ขึ้นกับชนิดคู่ผิวสัมผัส ไม่ขึ้นกับพื้นที่สัมผัส</li>
+      <li>ประโยชน์: การเดิน การเบรก ดอกยางรถ · โทษ: สึกหรอ เปลืองพลังงาน → ใช้น้ำมันหล่อลื่น/ล้อ/บอลแบริ่งลด</li>
+    </ul>
+
+    <h3>สมดุลกล (Mechanical Equilibrium)</h3>
+    <div class="formula-box">Σ<var>F</var> = 0 → Σ<var>F</var><sub>x</sub> = 0 และ Σ<var>F</var><sub>y</sub> = 0<small>วัตถุสมดุล: หยุดนิ่ง (สมดุลสถิต) หรือความเร็วคงตัว (สมดุลจลน์)</small></div>
+    <ul>
+      <li>แตกแรงเข้าแกน x และ y แล้วให้ผลรวมแต่ละแกนเป็นศูนย์</li>
+      <li>วัตถุแขวนนิ่งด้วยเชือก: แรงตึงรวมในแนวดิ่งต้องเท่ากับน้ำหนัก mg</li>
+      <li>วัตถุถูกลากด้วยความเร็วคงตัว: แรงดึง = แรงเสียดทานจลน์พอดี</li>
+    </ul>
+
+    <details class="example">
+      <summary>ตัวอย่างที่ 6.1 — หาแรงเสียดทานจลน์</summary>
+      <div class="sol">
+        <p>กล่องมวล 10 kg วางบนพื้นราบ μ<sub>k</sub> = 0.3 (g = 10 m/s²) ถูกลากให้เคลื่อนที่ จงหาแรงเสียดทานจลน์</p>
+        <p><b>วิธีทำ</b> N = mg = 10 × 10 = 100 N</p>
+        <p>f<sub>k</sub> = μ<sub>k</sub>N = 0.3 × 100 = 30 N</p>
+        <div class="ans">✅ แรงเสียดทานจลน์ = 30 N ทิศสวนการเคลื่อนที่</div>
+      </div>
+    </details>
+    <details class="example">
+      <summary>ตัวอย่างที่ 6.2 — ลากกล่องด้วยความเร็วคงตัว</summary>
+      <div class="sol">
+        <p>ต้องออกแรงดึงกล่องในแนวระดับ 25 N จึงลากกล่องมวล 5 kg ไปด้วย<b>ความเร็วคงตัว</b> (g = 10 m/s²) จงหา μ<sub>k</sub></p>
+        <p><b>วิธีทำ</b> ความเร็วคงตัว → สมดุล → แรงดึง = f<sub>k</sub> = 25 N</p>
+        <p>N = mg = 50 N → μ<sub>k</sub> = f<sub>k</sub>/N = 25/50 = 0.5</p>
+        <div class="ans">✅ μ<sub>k</sub> = 0.5</div>
+      </div>
+    </details>
+    <details class="example">
+      <summary>ตัวอย่างที่ 6.3 — ผลักแล้วขยับหรือไม่?</summary>
+      <div class="sol">
+        <p>กล่องมวล 8 kg วางบนพื้น μ<sub>s</sub> = 0.5 (g = 10 m/s²) ถ้าออกแรงผลักในแนวระดับ 30 N กล่องจะขยับหรือไม่?</p>
+        <p><b>วิธีทำ</b> f<sub>s,max</sub> = μ<sub>s</sub>N = 0.5 × 80 = 40 N</p>
+        <p>แรงผลัก 30 N &lt; 40 N → เสียดทานสถิตต้านได้อยู่</p>
+        <div class="ans">✅ กล่องไม่ขยับ และแรงเสียดทานขณะนั้น = 30 N (เท่าแรงผลักพอดี)</div>
+      </div>
+    </details>
+
+    <div class="quickcheck" data-qc="qc5">
+      <div class="qc-q">❓ เช็กความเข้าใจ: วัตถุถูกลากด้วยความเร็วคงตัวบนพื้นฝืด แรงดึงเทียบกับแรงเสียดทานเป็นอย่างไร?</div>
+      <div class="qc-opts">
+        <button data-ok="0">แรงดึงมากกว่า</button>
+        <button data-ok="1">เท่ากันพอดี</button>
+        <button data-ok="0">แรงดึงน้อยกว่า</button>
+      </div>
+      <div class="qc-fb"></div>
+    </div>
+    <p><a class="sim-link" onclick="showPage('sims');scrollToSim('simBox3')">🧪 เปิดแรงเสียดทานในแบบจำลอง แล้วดูว่าต้องออกแรงเท่าไรกล่องถึงขยับ →</a></p>
+    <div class="read-done"><button class="btn gold" onclick="markRead(6)" id="readBtn6">✅ อ่านจบบทที่ 6 แล้ว (+15 XP)</button></div>
+  </div>
+
+  <!-- ---- บทที่ 7 ---- -->
+  <div class="card lesson-body" id="chap-7">
+    <h3>บทที่ 7 · แรงดึงดูดระหว่างมวล (หัวข้อ 3.5)</h3>
+    <p>นิวตันค้นพบว่า <b>มวลทุกคู่ในเอกภพดึงดูดกันเสมอ</b> — แอปเปิลตกสู่พื้นและดวงจันทร์โคจรรอบโลก ล้วนเกิดจากแรงชนิดเดียวกัน!</p>
+    <div class="formula-box"><var>F</var> = <span class="frac"><span><var>G</var><var>m</var>₁<var>m</var>₂</span><span><var>r</var>²</span></span><small>G = 6.67 × 10⁻¹¹ N·m²/kg² · r = ระยะห่างระหว่างศูนย์กลางมวล</small></div>
+    <ul>
+      <li>แรงแปรผันตรงกับ<b>ผลคูณของมวลทั้งสอง</b> — มวลมากขึ้น ดึงดูดแรงขึ้น</li>
+      <li>แรงแปรผกผันกับ<b>กำลังสองของระยะห่าง</b> — ระยะเป็น 2 เท่า แรงเหลือ 1/4 · ระยะเป็น 3 เท่า แรงเหลือ 1/9</li>
+      <li>เป็นแรงคู่กิริยา–ปฏิกิริยา: โลกดึงเรา = เราดึงโลก (ขนาดเท่ากัน!)</li>
+      <li>ค่า G เล็กมาก → วัตถุทั่วไปดึงดูดกันน้อยจนไม่รู้สึก ต้องมวลระดับดาวเคราะห์ถึงเห็นผลชัด</li>
+    </ul>
+
+    <h3>ความเร่งโน้มถ่วง g มาจากไหน?</h3>
+    <div class="formula-box"><var>g</var> = <span class="frac"><span><var>G</var><var>M</var></span><span><var>R</var>²</span></span><small>M = มวลดาว, R = รัศมีดาว → ดาวแต่ละดวงมี g ไม่เท่ากัน</small></div>
+    <table class="compare-table">
+      <tr><th>ดาว</th><th>g (m/s²)</th><th>น้ำหนักคน 50 kg</th></tr>
+      <tr><td>🌍 โลก</td><td>9.8</td><td>490 N</td></tr>
+      <tr><td>🌙 ดวงจันทร์</td><td>1.6</td><td>80 N</td></tr>
+      <tr><td>🔴 ดาวอังคาร</td><td>3.7</td><td>185 N</td></tr>
+      <tr><td>🟠 ดาวพฤหัสบดี</td><td>24.8</td><td>1,240 N</td></tr>
+    </table>
+    <div class="key-point">💡 <b>มวล vs น้ำหนัก:</b> มวล (kg) เท่าเดิมทุกที่ในเอกภพ · น้ำหนัก (N) = mg เปลี่ยนตามดาวที่ยืนอยู่</div>
+
+    <details class="example">
+      <summary>ตัวอย่างที่ 7.1 — แรงดึงดูดระหว่างวัตถุ</summary>
+      <div class="sol">
+        <p>ทรงกลมมวล 100 kg สองลูก วางห่างกัน 1 m (ระหว่างศูนย์กลาง) จงหาแรงดึงดูดระหว่างกัน</p>
+        <p><b>วิธีทำ</b> F = Gm₁m₂/r² = (6.67 × 10⁻¹¹)(100)(100)/(1)²</p>
+        <div class="ans">✅ F = 6.67 × 10⁻⁷ N — น้อยมาก! นี่คือเหตุผลที่เราไม่รู้สึกถึงแรงดึงดูดของสิ่งของรอบตัว</div>
+      </div>
+    </details>
+    <details class="example">
+      <summary>ตัวอย่างที่ 7.2 — ระยะเปลี่ยน แรงเปลี่ยน</summary>
+      <div class="sol">
+        <p>ดาวเทียมอยู่ห่างจากศูนย์กลางโลก r ถูกแรงดึงดูด F ถ้าย้ายไปที่ระยะ 2r แรงดึงดูดจะเป็นเท่าใด?</p>
+        <p><b>วิธีทำ</b> F ∝ 1/r² → ระยะ 2 เท่า → แรง = F/2² = F/4</p>
+        <div class="ans">✅ แรงเหลือ F/4 (หนึ่งในสี่ของเดิม)</div>
+      </div>
+    </details>
+
+    <div class="quickcheck" data-qc="qc6">
+      <div class="qc-q">❓ เช็กความเข้าใจ: ถ้าระยะห่างระหว่างมวลสองก้อนลดลงครึ่งหนึ่ง แรงดึงดูดจะ...</div>
+      <div class="qc-opts">
+        <button data-ok="0">เพิ่มเป็น 2 เท่า</button>
+        <button data-ok="1">เพิ่มเป็น 4 เท่า</button>
+        <button data-ok="0">ลดลงครึ่งหนึ่ง</button>
+        <button data-ok="0">เท่าเดิม</button>
+      </div>
+      <div class="qc-fb"></div>
+    </div>
+    <p><a class="sim-link" onclick="showPage('sims');scrollToSim('simBox5')">🧪 ลองปรับมวลและระยะห่างในแบบจำลองแรงโน้มถ่วง →</a></p>
+    <div class="read-done"><button class="btn gold" onclick="markRead(7)" id="readBtn7">✅ อ่านจบบทที่ 7 แล้ว (+15 XP)</button></div>
+  </div>
+
+  <!-- ---- บทที่ 8 ---- -->
+  <div class="card lesson-body" id="chap-8">
+    <h3>บทที่ 8 · การประยุกต์ใช้กฎการเคลื่อนที่ (หัวข้อ 3.6)</h3>
+    <p>บทนี้คือการนำทุกอย่างมาใช้ร่วมกัน — ขั้นตอนมาตรฐานในการแก้โจทย์แรงทุกข้อคือ</p>
+    <ol>
+      <li>วาด <b>แผนภาพวัตถุอิสระ (FBD)</b> ของวัตถุแต่ละก้อน</li>
+      <li>เลือกแกน แล้วเขียนสมการ <b>ΣF = ma</b> ทีละแกน (แกนที่ไม่เคลื่อนที่ใช้ ΣF = 0)</li>
+      <li>แก้สมการหาปริมาณที่โจทย์ถาม</li>
+    </ol>
+
+    <h3>กรณีศึกษา 1: ลิฟต์ 🛗</h3>
+    <p>คนมวล m ยืนบนตาชั่งในลิฟต์ — แรงที่ตาชั่งอ่านได้คือแรงแนวฉาก N ซึ่งเปลี่ยนตามการเคลื่อนที่ของลิฟต์</p>
+    <table class="compare-table">
+      <tr><th>สภาพการเคลื่อนที่ของลิฟต์</th><th>สมการ</th><th>ตาชั่งอ่านได้</th></tr>
+      <tr><td>หยุดนิ่ง / ความเร็วคงตัว</td><td>N = mg</td><td>เท่าน้ำหนักจริง</td></tr>
+      <tr><td>เร่งขึ้นด้วยความเร่ง a</td><td>N = m(g + a)</td><td>มากกว่าน้ำหนัก (รู้สึกหนักขึ้น)</td></tr>
+      <tr><td>เร่งลงด้วยความเร่ง a</td><td>N = m(g − a)</td><td>น้อยกว่าน้ำหนัก (รู้สึกเบาลง)</td></tr>
+    </table>
+
+    <h3>กรณีศึกษา 2: วัตถุผูกติดกันด้วยเชือก 🔗</h3>
+    <ul>
+      <li>คิด<b>ทั้งระบบ</b>ก่อน: a = F / (m₁ + m₂) — เชือกเบาทำให้ทุกก้อนมีความเร่งเท่ากัน</li>
+      <li>แล้วค่อยแยกคิด<b>ทีละก้อน</b>เพื่อหาแรงตึงเชือก T</li>
+    </ul>
+
+    <details class="example">
+      <summary>ตัวอย่างที่ 8.1 — ลิฟต์ขนของ (โจทย์จากหนังสือเรียน สสวท.)</summary>
+      <div class="sol">
+        <p>ลิฟต์ขนของมวล 200 kg เคลื่อนที่ขึ้นด้วยความเร่ง 2.2 m/s² ถ้าลวดที่แขวนลิฟต์ทนแรงดึงได้สูงสุด 7,440 N ลิฟต์จะบรรทุกสิ่งของได้มากที่สุดเท่าใด (g = 9.8 m/s²)</p>
+        <p><b>วิธีทำ</b> ให้ x เป็นมวลสิ่งของ จากกฎข้อ 2: T − W = (มวลรวม)a</p>
+        <p>7440 − (200 + x)(9.8) = (200 + x)(2.2)</p>
+        <p>7440 = (200 + x)(12) → 200 + x = 620</p>
+        <div class="ans">✅ บรรทุกได้มากที่สุด x = 420 kg</div>
+      </div>
+    </details>
+    <details class="example">
+      <summary>ตัวอย่างที่ 8.2 — วัตถุสองก้อนผูกเชือก (โจทย์จากหนังสือเรียน สสวท.)</summary>
+      <div class="sol">
+        <p>วัตถุมวล 5.0 kg และ 10.0 kg ผูกติดกันด้วยเชือกเบา วางบนพื้นลื่น ออกแรง F คงตัวดึงก้อน 10 kg ไปข้างหน้านาน 15 s จนความเร็วเป็น 40 m/s จงหา F และแรงตึงเชือกที่ดึงมวล 5.0 kg</p>
+        <p><b>วิธีทำ</b> ทั้งระบบ: a = (v − u)/t = 40/15 = 8/3 m/s²</p>
+        <p>F = (5 + 10)(8/3) = 40 N</p>
+        <p>คิดเฉพาะก้อน 5 kg: T = (5)(8/3)</p>
+        <div class="ans">✅ F = 40 N และแรงตึงเชือก T ≈ 13.3 N</div>
+      </div>
+    </details>
+    <details class="example">
+      <summary>ตัวอย่างที่ 8.3 — ลากกล่องด้วยความเร็วคงตัว (สมดุล)</summary>
+      <div class="sol">
+        <p>ลากกล่องมวล 20 kg บนพื้นฝืด μk = 0.4 ให้เคลื่อนที่ด้วย<b>ความเร็วคงตัว</b> ต้องออกแรงดึงแนวระดับเท่าใด (g = 10 m/s²)</p>
+        <p><b>วิธีทำ</b> ความเร็วคงตัว → ΣF = 0 → แรงดึง = fk = μkN = 0.4 × 200</p>
+        <div class="ans">✅ ต้องออกแรง 80 N</div>
+      </div>
+    </details>
+
+    <div class="quickcheck" data-qc="qc8">
+      <div class="qc-q">❓ เช็กความเข้าใจ: ยืนบนตาชั่งในลิฟต์ที่กำลังเคลื่อนที่ "ลงด้วยความเร็วคงตัว" ตาชั่งจะอ่านค่า...</div>
+      <div class="qc-opts">
+        <button data-ok="0">มากกว่าน้ำหนักจริง</button>
+        <button data-ok="0">น้อยกว่าน้ำหนักจริง</button>
+        <button data-ok="1">เท่าน้ำหนักจริงพอดี</button>
+        <button data-ok="0">ศูนย์</button>
+      </div>
+      <div class="qc-fb"></div>
+    </div>
+    <p><a class="sim-link" onclick="showPage('sims');scrollToSim('simBox3')">🧪 ทบทวนด้วยแบบจำลอง ΣF = ma →</a></p>
+    <div class="read-done"><button class="btn gold" onclick="markRead(8)" id="readBtn8">✅ อ่านจบบทที่ 8 แล้ว (+15 XP)</button></div>
+  </div>
+</section>
+
+<!-- ============ SIMULATIONS ============ -->
+<section class="page" id="page-sims">
+  <div class="page-head"><h2>🧪 <span class="hl">แบบจำลอง</span>เสมือนจริง</h2><p>ปรับค่าด้วยแถบเลื่อน กดเล่น แล้วสังเกตผล — ทดลองครบทุกตัวรับเหรียญนักทดลอง!</p></div>
+
+  <!-- SIM 1 -->
+  <div class="card sim-panel" id="simBox1">
+    <h3>🚗 1. รถเคลื่อนที่แนวตรง + กราฟสด</h3>
+    <p class="desc">กำหนดความเร็วต้น (u) และความเร่ง (a) แล้วดูรถวิ่งพร้อมกราฟ x-t และ v-t วาดแบบเรียลไทม์</p>
+    <canvas id="simCv1" class="sim-stage" width="900" height="380"></canvas>
+    <div class="sim-controls">
+      <div class="ctl"><label>ความเร็วต้น u (m/s) <output id="s1uOut">5</output></label><input type="range" id="s1u" min="-15" max="15" value="5" step="1"></div>
+      <div class="ctl"><label>ความเร่ง a (m/s²) <output id="s1aOut">2</output></label><input type="range" id="s1a" min="-6" max="6" value="2" step="0.5"></div>
+      <button class="btn sm" id="s1play" onclick="sim1.toggle()">▶ เล่น</button>
+      <button class="btn sm ghost" onclick="sim1.reset()">⟳ รีเซ็ต</button>
+    </div>
+    <div class="readouts">
+      <div class="readout">เวลา t<b id="s1t">0.0 s</b></div>
+      <div class="readout">ตำแหน่ง x<b id="s1x">0.0 m</b></div>
+      <div class="readout">ความเร็ว v<b id="s1v">5.0 m/s</b></div>
+    </div>
+  </div>
+
+  <!-- SIM 2 -->
+  <div class="card sim-panel" id="simBox2">
+    <h3>🌍 2. การตกแบบเสรีบนดาวต่าง ๆ</h3>
+    <p class="desc">ปล่อยลูกบอลจากความสูง 45 m บนดาวที่เลือก สังเกตว่า g ต่างกันมีผลอย่างไร (จุดบอกตำแหน่งทุก 0.3 s — ระยะห่างที่เพิ่มขึ้นแสดงว่าเร็วขึ้น)</p>
+    <canvas id="simCv2" class="sim-stage" width="900" height="400"></canvas>
+    <div class="sim-controls">
+      <div class="ctl" style="flex:0 1 auto;min-width:200px">
+        <label>เลือกดาว</label>
+        <select class="sel" id="s2planet">
+          <option value="9.8" selected>🌍 โลก (g = 9.8)</option>
+          <option value="1.62">🌙 ดวงจันทร์ (g = 1.62)</option>
+          <option value="3.7">🔴 ดาวอังคาร (g = 3.7)</option>
+          <option value="24.8">🟠 ดาวพฤหัสบดี (g = 24.8)</option>
+        </select>
+      </div>
+      <button class="btn sm" id="s2play" onclick="sim2.toggle()">▶ ปล่อย</button>
+      <button class="btn sm ghost" onclick="sim2.reset()">⟳ รีเซ็ต</button>
+    </div>
+    <div class="readouts">
+      <div class="readout">เวลา t<b id="s2t">0.0 s</b></div>
+      <div class="readout">ระยะที่ตก<b id="s2y">0.0 m</b></div>
+      <div class="readout">ความเร็ว v<b id="s2v">0.0 m/s</b></div>
+    </div>
+  </div>
+
+  <!-- SIM 3 -->
+  <div class="card sim-panel" id="simBox3">
+    <h3>📦 3. กฎข้อที่ 2: ΣF = ma + แรงเสียดทาน</h3>
+    <p class="desc">ออกแรงผลักกล่อง ปรับมวลและสัมประสิทธิ์ความเสียดทาน — ถ้าแรงไม่พอชนะแรงเสียดทานสถิต กล่องจะไม่ขยับ! (g = 10 m/s²)</p>
+    <canvas id="simCv3" class="sim-stage" width="900" height="300"></canvas>
+    <div class="sim-controls">
+      <div class="ctl"><label>แรงผลัก F (N) <output id="s3FOut">40</output></label><input type="range" id="s3F" min="0" max="120" value="40" step="5"></div>
+      <div class="ctl"><label>มวล m (kg) <output id="s3mOut">5</output></label><input type="range" id="s3m" min="1" max="20" value="5" step="1"></div>
+      <div class="ctl"><label>สัมประสิทธิ์ μ <output id="s3muOut">0.3</output></label><input type="range" id="s3mu" min="0" max="1" value="0.3" step="0.05"></div>
+      <button class="btn sm" id="s3play" onclick="sim3.toggle()">▶ ผลัก!</button>
+      <button class="btn sm ghost" onclick="sim3.reset()">⟳ รีเซ็ต</button>
+    </div>
+    <div class="readouts">
+      <div class="readout">แรงเสียดทาน f<b id="s3f">15 N</b></div>
+      <div class="readout">แรงลัพธ์ ΣF<b id="s3net">25 N</b></div>
+      <div class="readout">ความเร่ง a<b id="s3a">5.0 m/s²</b></div>
+      <div class="readout">ความเร็ว v<b id="s3v">0.0 m/s</b></div>
+    </div>
+  </div>
+
+  <!-- SIM 4 -->
+  <div class="card sim-panel" id="simBox4">
+    <h3>🏹 4. การเคลื่อนที่แบบโพรเจกไทล์ (เสริม)</h3>
+    <p class="desc">ยิงลูกปืนใหญ่! ปรับความเร็วต้นและมุมยิง หามุมที่ยิงได้ไกลที่สุด (เฉลย: 45°) — g = 9.8 m/s²</p>
+    <canvas id="simCv4" class="sim-stage" width="900" height="360"></canvas>
+    <div class="sim-controls">
+      <div class="ctl"><label>ความเร็วต้น u (m/s) <output id="s4uOut">30</output></label><input type="range" id="s4u" min="10" max="50" value="30" step="1"></div>
+      <div class="ctl"><label>มุมยิง θ (°) <output id="s4angOut">45</output></label><input type="range" id="s4ang" min="10" max="80" value="45" step="1"></div>
+      <button class="btn sm" id="s4play" onclick="sim4.fire()">💥 ยิง!</button>
+      <button class="btn sm ghost" onclick="sim4.reset()">⟳ ล้างวิถี</button>
+    </div>
+    <div class="readouts">
+      <div class="readout">ระยะตกไกล<b id="s4range">— m</b></div>
+      <div class="readout">ความสูงสูงสุด<b id="s4hmax">— m</b></div>
+      <div class="readout">เวลาลอย<b id="s4time">— s</b></div>
+    </div>
+  </div>
+
+  <!-- SIM 5 -->
+  <div class="card sim-panel" id="simBox5">
+    <h3>🪐 5. แรงดึงดูดระหว่างมวล F = Gm₁m₂/r²</h3>
+    <p class="desc">ปรับมวลดาวสองดวงและระยะห่าง แล้วดูขนาดแรงดึงดูด (ลูกศรยาว = แรงมาก) — สังเกตว่าแรงที่กระทำต่อดาวทั้งสอง "เท่ากันเสมอ" ตามกฎข้อที่ 3</p>
+    <canvas id="simCv5" class="sim-stage" width="900" height="320"></canvas>
+    <div class="sim-controls">
+      <div class="ctl"><label>มวล m₁ (×10²⁴ kg) <output id="s5m1Out">6</output></label><input type="range" id="s5m1" min="1" max="20" value="6" step="1"></div>
+      <div class="ctl"><label>มวล m₂ (×10²⁴ kg) <output id="s5m2Out">6</output></label><input type="range" id="s5m2" min="1" max="20" value="6" step="1"></div>
+      <div class="ctl"><label>ระยะห่าง r (×10⁶ m) <output id="s5rOut">20</output></label><input type="range" id="s5r" min="10" max="40" value="20" step="1"></div>
+    </div>
+    <div class="readouts">
+      <div class="readout">แรงดึงดูด F<b id="s5F">—</b></div>
+    </div>
+  </div>
+
+  <!-- SIM 6 -->
+  <div class="card sim-panel" id="simBox6">
+    <h3>➕ 6. การหาแรงลัพธ์ของแรงสองแรงที่ทำมุมกัน</h3>
+    <p class="desc">ปรับขนาดแรง F₁ F₂ และมุมระหว่างแรง θ — แรงลัพธ์ (สีทอง) คือเส้นทแยงมุมของรูปสี่เหลี่ยมด้านขนาน ลอง θ = 90° แล้วเทียบกับพีทาโกรัส, θ = 0° และ 180° เทียบกับการบวก/ลบตรง ๆ</p>
+    <canvas id="simCv6" class="sim-stage" width="900" height="360"></canvas>
+    <div class="sim-controls">
+      <div class="ctl"><label>แรง F₁ (N) <output id="s6f1Out">30</output></label><input type="range" id="s6f1" min="10" max="100" value="30" step="5"></div>
+      <div class="ctl"><label>แรง F₂ (N) <output id="s6f2Out">40</output></label><input type="range" id="s6f2" min="10" max="100" value="40" step="5"></div>
+      <div class="ctl"><label>มุมระหว่างแรง θ (°) <output id="s6thOut">90</output></label><input type="range" id="s6th" min="0" max="180" value="90" step="5"></div>
+    </div>
+    <div class="readouts">
+      <div class="readout">แรงลัพธ์ ΣF<b id="s6R">50 N</b></div>
+      <div class="readout">มุมของแรงลัพธ์เทียบ F₁<b id="s6ang">53°</b></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ QUIZ ============ -->
+<section class="page" id="page-quiz">
+  <div class="page-head"><h2>📝 <span class="hl">แบบทดสอบ</span> 3 ระดับ</h2><p>สุ่มครั้งละ 10 ข้อจากคลังข้อสอบของแต่ละระดับ (ครอบคลุมครบทั้ง 8 บท) ทำซ้ำได้ไม่จำกัด ข้อสอบไม่ซ้ำเดิม — ได้ ≥ 8/10 ถือว่าผ่านระดับ!</p></div>
+
+  <div id="quizLevels" class="level-grid">
+    <div class="level-card easy" onclick="quiz.start('easy')">
+      <span class="em">🌱</span><h3>ระดับง่าย</h3>
+      <p>ความรู้พื้นฐาน นิยาม และแนวคิดสำคัญ · ข้อละ 10 XP</p>
+      <div class="best" id="bestEasy">คะแนนที่ดีที่สุด: —</div>
+    </div>
+    <div class="level-card med" onclick="quiz.start('med')">
+      <span class="em">🔥</span><h3>ระดับปานกลาง</h3>
+      <p>คำนวณขั้นตอนเดียว ใช้สูตรให้ถูก · ข้อละ 15 XP</p>
+      <div class="best" id="bestMed">คะแนนที่ดีที่สุด: —</div>
+    </div>
+    <div class="level-card hard" onclick="quiz.start('hard')">
+      <span class="em">💎</span><h3>ระดับยาก</h3>
+      <p>โจทย์หลายขั้นตอน วิเคราะห์ + คำนวณ · ข้อละ 20 XP</p>
+      <div class="best" id="bestHard">คะแนนที่ดีที่สุด: —</div>
+    </div>
+  </div>
+
+  <div id="quizPlay" style="display:none">
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <span class="q-num" id="qNum">ข้อ 1/10</span>
+        <span class="q-num" id="qScore">คะแนน: 0</span>
+      </div>
+      <div class="q-progress"><i id="qBar" style="width:0%"></i></div>
+      <div class="q-text" id="qText">—</div>
+      <div class="q-opts" id="qOpts"></div>
+      <div class="q-explain" id="qExplain"></div>
+      <div class="q-next-row">
+        <button class="btn" id="qNext" onclick="quiz.next()" style="visibility:hidden">ข้อถัดไป →</button>
+      </div>
+    </div>
+    <div style="text-align:center;margin-top:14px">
+      <button class="btn ghost sm" onclick="quiz.quit()">← ออกจากแบบทดสอบ</button>
+    </div>
+  </div>
+
+  <div id="quizResult" style="display:none">
+    <div class="card result-box">
+      <div class="big" id="rEmoji">🎉</div>
+      <h3 id="rTitle">ยอดเยี่ยม!</h3>
+      <div class="score"><span id="rScore">0</span>/10</div>
+      <div class="stars" id="rStars">★★★</div>
+      <p id="rMsg">—</p>
+      <div class="result-actions">
+        <button class="btn" onclick="quiz.retry()">🔁 ลองอีกครั้ง</button>
+        <button class="btn ghost" onclick="quiz.quit()">📋 เลือกระดับอื่น</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FORMULAS ============ -->
+<section class="page" id="page-formulas">
+  <div class="page-head"><h2>📋 <span class="hl">สรุปสูตร</span>ฉบับพกพา</h2><p>ทุกสูตรที่ต้องใช้ในบทนี้ รวมไว้หน้าเดียว</p></div>
+  <div class="card fx-group">
+    <h3>🏃 การเคลื่อนที่แนวตรง</h3>
+    <table class="fx-table">
+      <tr><td>v = Δx / Δt</td><td>ความเร็วเฉลี่ย (การกระจัดต่อเวลา)</td></tr>
+      <tr><td>a = (v − u) / t</td><td>ความเร่งเฉลี่ย</td></tr>
+      <tr><td>v = u + at</td><td>สมการที่ 1 (ไม่มี s)</td></tr>
+      <tr><td>s = ut + ½at²</td><td>สมการที่ 2 (ไม่มี v)</td></tr>
+      <tr><td>v² = u² + 2as</td><td>สมการที่ 3 (ไม่มี t)</td></tr>
+      <tr><td>s = ½(u + v)t</td><td>สมการที่ 4 (ไม่มี a)</td></tr>
+    </table>
+  </div>
+  <div class="card fx-group">
+    <h3>🍎 การตกแบบเสรี (แทน a ด้วย g ≈ 9.8 หรือ 10 m/s²)</h3>
+    <table class="fx-table">
+      <tr><td>v = gt , s = ½gt²</td><td>ปล่อยตก (u = 0)</td></tr>
+      <tr><td>t ขึ้น = u/g , h สูงสุด = u²/2g</td><td>ขว้างขึ้นแนวดิ่ง (ที่จุดสูงสุด v = 0)</td></tr>
+    </table>
+  </div>
+  <div class="card fx-group">
+    <h3>💪 แรงและกฎนิวตัน</h3>
+    <table class="fx-table">
+      <tr><td>ΣF = 0</td><td>กฎข้อ 1 — สมดุล: หยุดนิ่งหรือความเร็วคงตัว</td></tr>
+      <tr><td>ΣF = ma</td><td>กฎข้อ 2 — แรงลัพธ์ทำให้เกิดความเร่ง</td></tr>
+      <tr><td>F(A→B) = −F(B→A)</td><td>กฎข้อ 3 — กิริยา = ปฏิกิริยา (คนละวัตถุ)</td></tr>
+      <tr><td>W = mg</td><td>น้ำหนัก (N) — เปลี่ยนตามดาว, มวลคงเดิม</td></tr>
+      <tr><td>ΣF = √(F₁² + F₂² + 2F₁F₂cos θ)</td><td>แรงลัพธ์ของแรงสองแรงทำมุม θ (ตั้งฉาก → พีทาโกรัส)</td></tr>
+      <tr><td>N = m(g + a) , N = m(g − a)</td><td>แรงพื้นลิฟต์ดัน ขณะลิฟต์เร่งขึ้น / เร่งลง</td></tr>
+    </table>
+  </div>
+  <div class="card fx-group">
+    <h3>🧱 แรงเสียดทานและสมดุล</h3>
+    <table class="fx-table">
+      <tr><td>f(s) ≤ μ(s)N</td><td>เสียดทานสถิต — ค่าสูงสุดคือ μ(s)N</td></tr>
+      <tr><td>f(k) = μ(k)N</td><td>เสียดทานจลน์ — ขณะวัตถุเคลื่อนที่</td></tr>
+      <tr><td>ΣFx = 0 , ΣFy = 0</td><td>เงื่อนไขสมดุลกล</td></tr>
+    </table>
+  </div>
+  <div class="card fx-group">
+    <h3>🪐 แรงดึงดูดระหว่างมวล</h3>
+    <table class="fx-table">
+      <tr><td>F = Gm₁m₂ / r²</td><td>กฎแรงโน้มถ่วงสากล · G = 6.67 × 10⁻¹¹ N·m²/kg²</td></tr>
+      <tr><td>g = GM / R²</td><td>ความเร่งโน้มถ่วงที่ผิวดาวมวล M รัศมี R</td></tr>
+    </table>
+  </div>
+</section>
+
+<!-- ============ BADGES ============ -->
+<section class="page" id="page-badges">
+  <div class="page-head"><h2>🏆 <span class="hl">ความสำเร็จ</span>ของฉัน</h2><p>สะสมเหรียญให้ครบทั้ง 6 — รีเซ็ตความก้าวหน้าได้ที่ปุ่มด้านล่าง</p></div>
+  <div class="badge-grid" id="badgeGrid"></div>
+  <div style="text-align:center;margin-top:30px">
+    <button class="btn ghost sm" onclick="resetProgress()">🗑️ ล้างความก้าวหน้าทั้งหมด</button>
+  </div>
+</section>
+
+<!-- ============ FBD PRACTICE ============ -->
+<section class="page" id="page-fbd">
+  <div class="page-head"><h2>🎯 ฝึก<span class="hl">แผนภาพวัตถุอิสระ (FBD)</span></h2><p>ฝึก 4 รูปแบบ สุ่มสถานการณ์ไม่ซ้ำ ตอบถูกรับ 8 XP ต่อข้อ — ตอบถูกครบ 10 ข้อ รับเหรียญ "เซียน FBD"!</p></div>
+  <div class="chip-row" id="fbdModes">
+    <div class="chip active" data-mode="pick">✅ เลือกแรงให้ครบ</div>
+    <div class="chip" data-mode="dir">🧭 ทิศของแรง</div>
+    <div class="chip" data-mode="match">🖼️ จับคู่ FBD กับสถานการณ์</div>
+    <div class="chip" data-mode="size">⚖️ เทียบขนาดแรง</div>
+  </div>
+  <div class="card">
+    <div class="q-text" id="fbdQ" style="margin-top:0">—</div>
+    <canvas id="fbdCv" class="sim-stage" width="900" height="300"></canvas>
+    <div id="fbdOpts" class="q-opts" style="margin-top:16px"></div>
+    <div class="q-explain" id="fbdExplain"></div>
+    <div class="q-next-row">
+      <button class="btn ghost" id="fbdCheck" onclick="fbd.submit()" style="display:none">✔ ตรวจคำตอบ</button>
+      <button class="btn" id="fbdNext" onclick="fbd.next()" style="visibility:hidden;margin-left:10px">ข้อถัดไป →</button>
+    </div>
+  </div>
+  <div class="readouts" style="margin-top:14px">
+    <div class="readout">ทำไปแล้ว<b id="fbdDone">0 ข้อ</b></div>
+    <div class="readout">ตอบถูก<b id="fbdCorrect">0 ข้อ</b></div>
+    <div class="readout">ความแม่นยำ<b id="fbdAcc">—</b></div>
+  </div>
+</section>
+
+<!-- ============ GLOBAL STATS ============ -->
+<section class="page" id="page-stats">
+  <div class="page-head"><h2>🌍 <span class="hl">สถิติรวม</span>ของผู้เรียนทุกคน</h2><p>รวมจากทุกคนที่เข้าใช้แอปนี้ทุกที่ทุกเครื่อง (เมื่อเชื่อมต่อระบบคลาวด์)</p></div>
+  <div class="key-point" id="cloudState">⏳ กำลังตรวจสอบการเชื่อมต่อ…</div>
+  <div class="stat-grid">
+    <div class="stat"><span class="em">👣</span><div><b id="gVisits">—</b><small>จำนวนครั้งที่เข้าใช้งานรวม</small></div></div>
+    <div class="stat"><span class="em">👥</span><div><b id="gUsers">—</b><small>ผู้เรียนที่ล็อกอินทั้งหมด</small></div></div>
+    <div class="stat"><span class="em">📝</span><div><b id="gQuizzes">—</b><small>แบบทดสอบที่ทำจบรวม</small></div></div>
+    <div class="stat"><span class="em">⭐</span><div><b id="gXP">—</b><small>XP รวมของทุกคน</small></div></div>
+  </div>
+  <div class="card" style="margin-top:20px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:10px">
+      <h3 style="font-family:'Prompt';font-size:18px">🏆 ตารางอันดับ Top 10 (เรียงตาม XP)</h3>
+      <button class="btn sm ghost" onclick="cloudRefreshStats()">⟳ รีเฟรช</button>
+    </div>
+    <table class="fx-table" id="lbTable"><tr><td style="color:var(--muted)">ยังไม่มีข้อมูล — ต้องเชื่อมต่อคลาวด์และมีผู้เรียนล็อกอิน</td></tr></table>
+  </div>
+  <details class="example" style="margin-top:20px">
+    <summary>⚙️ สำหรับครู: วิธีเปิดใช้ระบบคลาวด์ (Firebase — ฟรี ใช้เวลา ~10 นาที)</summary>
+    <div class="sol">
+      <ol style="line-height:2">
+        <li>ไปที่ <b>console.firebase.google.com</b> → สร้างโปรเจกต์ใหม่ (ปิด Analytics ได้)</li>
+        <li>กดไอคอน <b>&lt;/&gt;</b> (Add web app) ตั้งชื่อแอป → คัดลอกค่า <b>firebaseConfig</b> ที่ได้</li>
+        <li>เปิดไฟล์นี้ด้วยโปรแกรมแก้ข้อความ ค้นหาคำว่า <b>FIREBASE_CONFIG</b> แล้ววางค่า apiKey, authDomain, projectId, appId ลงไปแทนที่ข้อความเดิม</li>
+        <li>ในเมนู <b>Authentication → Sign-in method</b> เปิดใช้ <b>Google</b> และ <b>Anonymous</b></li>
+        <li>ในเมนู <b>Firestore Database</b> → Create database (โหมด production) → แท็บ <b>Rules</b> วางกฎนี้แล้ว Publish:</li>
+      </ol>
+      <div class="setup-code">rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{uid} {
+      allow read: if true;
+      allow write: if request.auth != null &amp;&amp; request.auth.uid == uid;
+    }
+    match /global/stats {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+  }
+}</div>
+      <ol start="6" style="line-height:2">
+        <li>นำไฟล์นี้ขึ้นโฮสต์ผ่าน http/https เช่น <b>Firebase Hosting</b>, GitHub Pages หรือ Google Sites (การล็อกอิน Google ใช้ไม่ได้ถ้าเปิดไฟล์ตรง ๆ แบบ file://)</li>
+        <li>ใน Authentication → Settings → <b>Authorized domains</b> เพิ่มโดเมนที่ใช้โฮสต์</li>
+      </ol>
+      <p>เสร็จแล้วแอปจะสลับเป็นโหมดคลาวด์อัตโนมัติ: นักเรียนล็อกอินด้วย Gmail สถิติส่วนตัวติดตัวข้ามเครื่อง และหน้านี้จะแสดงสถิติรวม + ตารางอันดับของทั้งห้อง</p>
+    </div>
+  </details>
+</section>
+
+</main>
+</div>
+
+<div id="toasts"></div>
+<canvas id="confettiCv"></canvas>
+
+<script>
+/* ================== STATE & GAMIFICATION ================== */
+const LS = 'physiquest_m4_fm';
+let S = { read:[], sims:[], qc:[], best:{easy:-1, med:-1, hard:-1}, xp:0, badges:[], fbd:{done:0, correct:0} };
+try { const raw = localStorage.getItem(LS); if (raw) S = Object.assign(S, JSON.parse(raw)); } catch(e){}
+if (!S.fbd) S.fbd = {done:0, correct:0};
+function save(){
+  try{ localStorage.setItem(LS, JSON.stringify(S)); }catch(e){}
+  if (typeof cloudPush === 'function') cloudPush();   // ซิงก์ขึ้นคลาวด์ (ถ้าเชื่อมต่อ)
+}
+
+const LV_NAMES = ['มือใหม่','นักสำรวจ','นักเรียนฟิสิกส์','นักทดลอง','นักวิทยาศาสตร์','ไอน์สไตน์น้อย','จ้าวฟิสิกส์'];
+const LV_STEP = 120;
+
+const BADGES = [
+  {id:'firstquiz', em:'🎯', name:'ก้าวแรกนักสู้', desc:'ทำแบบทดสอบจบ 1 ครั้ง', check:s=>s.best.easy>=0||s.best.med>=0||s.best.hard>=0},
+  {id:'reader',    em:'📖', name:'หนอนหนังสือ', desc:'อ่านบทเรียนจบครบ 8 บท', check:s=>s.read.length>=8},
+  {id:'scientist', em:'🔬', name:'นักทดลองตัวจริง', desc:'เล่นแบบจำลองครบทั้ง 6 ตัว', check:s=>s.sims.length>=6},
+  {id:'perfect',   em:'💯', name:'เพอร์เฟกต์!', desc:'ได้คะแนนเต็ม 10/10 ในระดับใดก็ได้', check:s=>s.best.easy===10||s.best.med===10||s.best.hard===10},
+  {id:'fbdpro',    em:'🎯', name:'เซียน FBD', desc:'ตอบแบบฝึก FBD ถูกครบ 10 ข้อ', check:s=>s.fbd && s.fbd.correct>=10},
+  {id:'master',    em:'👑', name:'จ้าวแห่งแรง', desc:'ผ่าน (≥8/10) ครบทั้ง 3 ระดับ', check:s=>s.best.easy>=8&&s.best.med>=8&&s.best.hard>=8},
+];
+
+function toast(msg, gold){
+  const t = document.createElement('div');
+  t.className = 'toast' + (gold ? ' gold' : '');
+  t.innerHTML = msg;
+  document.getElementById('toasts').appendChild(t);
+  setTimeout(()=>{ t.classList.add('out'); setTimeout(()=>t.remove(), 450); }, 3200);
+}
+
+function addXP(n, why){
+  S.xp += n; save();
+  if (typeof cloudXP === 'function') cloudXP(n);   // บวกเข้า XP รวมของทุกคน
+  toast('⭐ +' + n + ' XP — ' + why);
+  refreshHUD(); checkBadges();
+}
+
+function checkBadges(){
+  BADGES.forEach(b=>{
+    if (!S.badges.includes(b.id) && b.check(S)){
+      S.badges.push(b.id); save();
+      toast(b.em + ' ได้เหรียญ "' + b.name + '"!', true);
+      confettiBurst();
+    }
+  });
+  refreshHUD();
+}
+
+/* ================== HUD / HOME ================== */
+function refreshHUD(){
+  const lv = Math.floor(S.xp / LV_STEP) + 1;
+  document.getElementById('lvNum').textContent = lv;
+  document.getElementById('lvName').textContent = LV_NAMES[Math.min(lv-1, LV_NAMES.length-1)];
+  document.getElementById('xpFill').style.width = ((S.xp % LV_STEP) / LV_STEP * 100) + '%';
+  document.getElementById('xpNow').textContent = S.xp;
+
+  document.getElementById('stChap').textContent = S.read.length + '/8';
+  document.getElementById('stSim').textContent = S.sims.length + '/6';
+  const passed = ['easy','med','hard'].filter(k=>S.best[k] >= 8).length;
+  document.getElementById('stQuiz').textContent = passed + '/3';
+  document.getElementById('stBadge').textContent = S.badges.length + '/6';
+
+  const pct = Math.round(S.read.length/8*40 + S.sims.length/6*30 + passed/3*30);
+  document.getElementById('ringPct').textContent = pct + '%';
+  document.getElementById('ringFill').style.strokeDashoffset = 351.86 * (1 - pct/100);
+
+  const bestTxt = (v)=> v < 0 ? 'คะแนนที่ดีที่สุด: —' : 'คะแนนที่ดีที่สุด: ' + v + '/10' + (v===10?' 💯':v>=8?' ✅':'');
+  document.getElementById('bestEasy').textContent = bestTxt(S.best.easy);
+  document.getElementById('bestMed').textContent  = bestTxt(S.best.med);
+  document.getElementById('bestHard').textContent = bestTxt(S.best.hard);
+
+  document.getElementById('badgeGrid').innerHTML = BADGES.map(b=>
+    '<div class="badge' + (S.badges.includes(b.id)?' earned':'') + '">' +
+    '<span class="em">' + b.em + '</span><h4>' + b.name + '</h4><p>' + b.desc + '</p></div>'
+  ).join('');
+
+  for (let i=1;i<=8;i++){
+    const btn = document.getElementById('readBtn'+i);
+    if (btn && S.read.includes(i)){ btn.textContent = '⭐ อ่านจบแล้ว'; btn.disabled = true; }
+  }
+}
+
+function resetProgress(){
+  if (!confirm('ล้างความก้าวหน้า XP เหรียญ และคะแนนทั้งหมด?')) return;
+  S = { read:[], sims:[], qc:[], best:{easy:-1, med:-1, hard:-1}, xp:0, badges:[] };
+  save(); location.reload();
+}
+
+/* ================== NAVIGATION ================== */
+function showPage(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active', n.dataset.page===id));
+  document.querySelector('.sidebar').classList.remove('open');
+  window.scrollTo({top:0});
+}
+document.querySelectorAll('.nav-item').forEach(n=> n.addEventListener('click', ()=>showPage(n.dataset.page)));
+
+document.querySelectorAll('#chapChips .chip').forEach(c=> c.addEventListener('click', ()=>{
+  document.querySelectorAll('#chapChips .chip').forEach(x=>x.classList.remove('active'));
+  c.classList.add('active');
+  document.querySelectorAll('.lesson-body').forEach(b=>b.classList.remove('active'));
+  document.getElementById('chap-'+c.dataset.chap).classList.add('active');
+  window.scrollTo({top:0,behavior:'smooth'});
+}));
+
+function scrollToSim(id){
+  setTimeout(()=>{ const el = document.getElementById(id); if (el) el.scrollIntoView({behavior:'smooth', block:'start'}); }, 120);
+}
+
+function markRead(n){
+  if (S.read.includes(n)) return;
+  S.read.push(n); save();
+  addXP(15, 'อ่านจบบทที่ ' + n);
+}
+
+/* quick-check ในบทเรียน */
+document.querySelectorAll('.quickcheck').forEach(qcEl=>{
+  const id = qcEl.dataset.qc, fb = qcEl.querySelector('.qc-fb');
+  qcEl.querySelectorAll('.qc-opts button').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      if (btn.dataset.ok === '1'){
+        btn.classList.add('right');
+        fb.style.color = '#6ee7b7';
+        if (!S.qc.includes(id)){ S.qc.push(id); save(); fb.textContent = '🎉 ถูกต้อง! +5 XP'; addXP(5, 'ตอบเช็กความเข้าใจถูก'); }
+        else fb.textContent = '🎉 ถูกต้อง!';
+        qcEl.querySelectorAll('button').forEach(b=>b.disabled = true);
+      } else {
+        btn.classList.add('wrong'); btn.disabled = true;
+        fb.style.color = '#fca5a5'; fb.textContent = '❌ ยังไม่ใช่ ลองใหม่อีกครั้ง!';
+      }
+    });
+  });
+});
+
+/* ================== CONFETTI ================== */
+const cCv = document.getElementById('confettiCv'), cCtx = cCv.getContext('2d');
+let confs = [], confRun = false;
+function confettiBurst(){
+  cCv.width = innerWidth; cCv.height = innerHeight;
+  const colors = ['#6366f1','#22d3ee','#fbbf24','#34d399','#f87171','#a855f7'];
+  for (let i=0;i<130;i++) confs.push({
+    x: Math.random()*cCv.width, y: -20 - Math.random()*150,
+    w: 6+Math.random()*7, h: 8+Math.random()*8,
+    vy: 2.4+Math.random()*3.2, vx: -1.5+Math.random()*3,
+    rot: Math.random()*Math.PI, vr: -0.14+Math.random()*0.28,
+    c: colors[(Math.random()*colors.length)|0]
+  });
+  if (!confRun){ confRun = true; confTick(); }
+}
+function confTick(){
+  cCtx.clearRect(0,0,cCv.width,cCv.height);
+  confs = confs.filter(p=>p.y < cCv.height + 30);
+  confs.forEach(p=>{
+    p.x += p.vx; p.y += p.vy; p.rot += p.vr;
+    cCtx.save(); cCtx.translate(p.x,p.y); cCtx.rotate(p.rot);
+    cCtx.fillStyle = p.c; cCtx.fillRect(-p.w/2,-p.h/2,p.w,p.h); cCtx.restore();
+  });
+  if (confs.length) requestAnimationFrame(confTick);
+  else { confRun = false; cCtx.clearRect(0,0,cCv.width,cCv.height); }
+}
+
+/* ================== SIM HELPERS ================== */
+function simUsed(n){
+  if (!S.sims.includes(n)){ S.sims.push(n); save(); addXP(10, 'ทดลองแบบจำลองที่ ' + n); }
+}
+function bindRange(id, outId, fn){
+  const el = document.getElementById(id), out = document.getElementById(outId);
+  el.addEventListener('input', ()=>{ out.textContent = el.value; if (fn) fn(); });
+  return el;
+}
+function arrow(ctx, x1,y1,x2,y2, color, w){
+  const hd = 9 + w*1.5, ang = Math.atan2(y2-y1, x2-x1);
+  ctx.strokeStyle = color; ctx.fillStyle = color; ctx.lineWidth = w;
+  ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(x2,y2);
+  ctx.lineTo(x2 - hd*Math.cos(ang - 0.42), y2 - hd*Math.sin(ang - 0.42));
+  ctx.lineTo(x2 - hd*Math.cos(ang + 0.42), y2 - hd*Math.sin(ang + 0.42));
+  ctx.closePath(); ctx.fill();
+}
+
+/* ================== SIM 1 : รถแนวตรง + กราฟ ================== */
+const sim1 = (()=>{
+  const cv = document.getElementById('simCv1'), ctx = cv.getContext('2d');
+  let t = 0, x = 0, v = 0, run = false, last = 0, hist = [];
+  const uEl = bindRange('s1u','s1uOut', ()=>{ if(!run) reset(); });
+  const aEl = bindRange('s1a','s1aOut', ()=>{});
+  const X2PX = m => 450 + m * 4.1;   // -100..100 m → 40..860 px
+
+  function reset(){
+    run = false; t = 0; x = 0; v = +uEl.value; hist = [];
+    document.getElementById('s1play').textContent = '▶ เล่น';
+    readouts(); draw();
+  }
+  function toggle(){
+    if (!run && (t >= 12 || Math.abs(x) > 100)) reset();
+    run = !run; last = performance.now();
+    document.getElementById('s1play').textContent = run ? '⏸ หยุด' : '▶ เล่น';
+    if (run){ simUsed(1); requestAnimationFrame(tick); }
+  }
+  function tick(now){
+    if (!run) return;
+    let dt = Math.min((now - last)/1000, 0.05); last = now;
+    const a = +aEl.value;
+    v += a*dt; x += v*dt; t += dt;
+    hist.push({t, x, v});
+    if (t >= 12 || Math.abs(x) > 100){ run = false; document.getElementById('s1play').textContent = '▶ เล่น'; }
+    readouts(); draw();
+    if (run) requestAnimationFrame(tick);
+  }
+  function readouts(){
+    document.getElementById('s1t').textContent = t.toFixed(1) + ' s';
+    document.getElementById('s1x').textContent = x.toFixed(1) + ' m';
+    document.getElementById('s1v').textContent = v.toFixed(1) + ' m/s';
+  }
+  function graph(px, py, pw, ph, title, ymin, ymax, key, color){
+    ctx.strokeStyle = 'rgba(148,163,255,.25)'; ctx.lineWidth = 1;
+    ctx.strokeRect(px, py, pw, ph);
+    const y0 = py + ph * (ymax/(ymax-ymin));
+    ctx.beginPath(); ctx.moveTo(px, y0); ctx.lineTo(px+pw, y0); ctx.stroke();
+    ctx.fillStyle = '#93a3c8'; ctx.font = '13px Prompt'; ctx.fillText(title, px + 6, py + 16);
+    if (hist.length > 1){
+      ctx.strokeStyle = color; ctx.lineWidth = 2.2; ctx.beginPath();
+      hist.forEach((h,i)=>{
+        const gx = px + (h.t/12)*pw;
+        const gy = py + ph*((ymax - Math.max(ymin, Math.min(ymax, h[key])))/(ymax-ymin));
+        i ? ctx.lineTo(gx,gy) : ctx.moveTo(gx,gy);
+      });
+      ctx.stroke();
+    }
+  }
+  function draw(){
+    ctx.clearRect(0,0,900,380);
+    // ถนน
+    ctx.fillStyle = '#131b31'; ctx.fillRect(0,0,900,140);
+    ctx.strokeStyle = '#2a3a63'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(20,112); ctx.lineTo(880,112); ctx.stroke();
+    ctx.fillStyle = '#5a6c99'; ctx.font = '11px Sarabun'; ctx.textAlign = 'center';
+    for (let m = -100; m <= 100; m += 25){
+      const px = X2PX(m);
+      ctx.fillRect(px-1, 106, 2, 12);
+      ctx.fillText(m + ' m', px, 132);
+    }
+    ctx.textAlign = 'left';
+    // รถ
+    const cx = X2PX(Math.max(-100, Math.min(100, x)));
+    ctx.font = '38px serif'; ctx.save();
+    ctx.translate(cx, 92);
+    if (v < -0.01) ctx.scale(-1,1);
+    ctx.fillText('🚗', -22, 0); ctx.restore();
+    // ลูกศรความเร็ว
+    if (Math.abs(v) > 0.3) arrow(ctx, cx, 46, cx + Math.max(-90, Math.min(90, v*2.2)), 46, '#22d3ee', 3.5);
+    ctx.fillStyle = '#22d3ee'; ctx.font = '12px Prompt'; ctx.fillText('v', cx + 6, 38);
+    // กราฟ
+    graph(40, 165, 390, 195, 'กราฟ x-t (m)', -100, 100, 'x', '#818cf8');
+    graph(475, 165, 390, 195, 'กราฟ v-t (m/s)', -60, 60, 'v', '#22d3ee');
+  }
+  reset();
+  return {toggle, reset, draw};
+})();
+
+/* ================== SIM 2 : การตกแบบเสรี ================== */
+const sim2 = (()=>{
+  const cv = document.getElementById('simCv2'), ctx = cv.getContext('2d');
+  const H = 45, TOP = 40, GY = 372, SC = (GY - TOP - 14) / H;
+  let t = 0, y = 0, v = 0, run = false, done = false, last = 0, trail = [], trailT = 0;
+  const sel = document.getElementById('s2planet');
+  sel.addEventListener('change', reset);
+  function reset(){
+    run = false; done = false; t = 0; y = 0; v = 0; trail = []; trailT = 0;
+    document.getElementById('s2play').textContent = '▶ ปล่อย';
+    readouts(); draw();
+  }
+  function toggle(){
+    if (done) reset();
+    run = !run; last = performance.now();
+    document.getElementById('s2play').textContent = run ? '⏸ หยุด' : '▶ ปล่อย';
+    if (run){ simUsed(2); requestAnimationFrame(tick); }
+  }
+  function tick(now){
+    if (!run) return;
+    let dt = Math.min((now-last)/1000, 0.05); last = now;
+    const g = +sel.value;
+    v += g*dt; y += v*dt; t += dt; trailT += dt;
+    if (trailT >= 0.3){ trailT = 0; trail.push(y); }
+    if (y >= H){ y = H; v = Math.sqrt(2*g*H); t = Math.sqrt(2*H/g); run = false; done = true;
+      document.getElementById('s2play').textContent = '⟳ ปล่อยใหม่'; }
+    readouts(); draw();
+    if (run) requestAnimationFrame(tick);
+  }
+  function readouts(){
+    document.getElementById('s2t').textContent = t.toFixed(2) + ' s';
+    document.getElementById('s2y').textContent = y.toFixed(1) + ' m';
+    document.getElementById('s2v').textContent = v.toFixed(1) + ' m/s';
+  }
+  function draw(){
+    ctx.clearRect(0,0,900,400);
+    const g = +sel.value;
+    // ฉากหลังตามดาว
+    ctx.fillStyle = g > 20 ? '#20150a' : g < 2 ? '#111118' : g < 5 ? '#1c1210' : '#0d1626';
+    ctx.fillRect(0,0,900,400);
+    if (g < 2){ ctx.fillStyle = '#e6ecff';
+      for (let i=0;i<40;i++) ctx.fillRect((i*173)%900, (i*97)%360, 1.6, 1.6); }
+    // พื้น
+    ctx.fillStyle = '#2a3a63'; ctx.fillRect(0, GY, 900, 28);
+    ctx.fillStyle = '#93a3c8'; ctx.font = '13px Sarabun';
+    // ไม้บรรทัดข้าง
+    ctx.textAlign = 'right';
+    for (let m=0; m<=45; m+=5){
+      const py = TOP + m*SC;
+      ctx.fillRect(180, py, 10, 1.5);
+      ctx.fillText(m + ' m', 172, py + 4);
+    }
+    ctx.textAlign = 'left';
+    ctx.fillText('ความสูงปล่อย 45 m · g = ' + g + ' m/s²', 620, 30);
+    // trail
+    trail.forEach(ty=>{
+      ctx.beginPath(); ctx.arc(450, TOP + ty*SC, 4, 0, 7);
+      ctx.fillStyle = 'rgba(34,211,238,.5)'; ctx.fill();
+    });
+    // ลูกบอล
+    const by = TOP + y*SC;
+    ctx.font = '30px serif'; ctx.textAlign = 'center';
+    ctx.fillText('⚽', 450, by + 10);
+    ctx.textAlign = 'left';
+    // ลูกศร v
+    if (v > 0.5) arrow(ctx, 492, by, 492, Math.min(GY-4, by + 14 + v*2), '#f87171', 3);
+    if (done){
+      ctx.fillStyle = '#34d399'; ctx.font = 'bold 17px Prompt'; ctx.textAlign = 'center';
+      ctx.fillText('ถึงพื้น! ใช้เวลา ' + t.toFixed(2) + ' s · ความเร็วกระทบ ' + v.toFixed(1) + ' m/s', 450, 60);
+      ctx.textAlign = 'left';
+    }
+  }
+  reset();
+  return {toggle, reset};
+})();
+
+/* ================== SIM 3 : กฎข้อ 2 + แรงเสียดทาน ================== */
+const sim3 = (()=>{
+  const cv = document.getElementById('simCv3'), ctx = cv.getContext('2d');
+  const GY = 232, g = 10;
+  let x = 90, v = 0, run = false, last = 0, dist = 0;
+  const FEl = bindRange('s3F','s3FOut', calc);
+  const mEl = bindRange('s3m','s3mOut', calc);
+  const muEl = bindRange('s3mu','s3muOut', calc);
+  function phys(){
+    const F = +FEl.value, m = +mEl.value, mu = +muEl.value;
+    const fmax = mu * m * g;
+    let f, a, moving = v > 0.01;
+    if (!moving && F <= fmax){ f = F; a = 0; }         // สถิตต้านอยู่
+    else { f = fmax; a = (F - f)/m; if (!moving && a < 0) { f = F; a = 0; } }
+    return {F, m, mu, f, a, fmax};
+  }
+  function calc(){
+    const p = phys();
+    document.getElementById('s3f').textContent = p.f.toFixed(0) + ' N';
+    document.getElementById('s3net').textContent = (p.F - p.f).toFixed(0) + ' N';
+    document.getElementById('s3a').textContent = p.a.toFixed(1) + ' m/s²';
+    document.getElementById('s3v').textContent = v.toFixed(1) + ' m/s';
+    draw(p);
+  }
+  function reset(){
+    run = false; x = 90; v = 0; dist = 0;
+    document.getElementById('s3play').textContent = '▶ ผลัก!';
+    calc();
+  }
+  function toggle(){
+    run = !run; last = performance.now();
+    document.getElementById('s3play').textContent = run ? '⏸ หยุด' : '▶ ผลัก!';
+    if (run){ simUsed(3); requestAnimationFrame(tick); }
+  }
+  function tick(now){
+    if (!run) return;
+    let dt = Math.min((now-last)/1000, 0.05); last = now;
+    const p = phys();
+    v += p.a * dt;
+    if (v < 0) v = 0;
+    x += v * dt * 6; dist += v * dt;
+    if (x > 830) x = 90;   // วนกลับ
+    calc();
+    if (run) requestAnimationFrame(tick);
+  }
+  function draw(p){
+    ctx.clearRect(0,0,900,300);
+    ctx.fillStyle = '#131b31'; ctx.fillRect(0,0,900,300);
+    // พื้น + ลาย
+    ctx.fillStyle = '#2a3a63'; ctx.fillRect(0, GY, 900, 68);
+    ctx.strokeStyle = '#1c2a4a'; ctx.lineWidth = 2;
+    for (let i=0;i<30;i++){ ctx.beginPath(); ctx.moveTo(i*32, GY+68); ctx.lineTo(i*32+16, GY); ctx.stroke(); }
+    // กล่อง (ขนาดตามมวล)
+    const bs = 46 + p.m * 2.4, bx = x, by = GY - bs;
+    const grd = ctx.createLinearGradient(bx, by, bx, GY);
+    grd.addColorStop(0, '#8b5cf6'); grd.addColorStop(1, '#6366f1');
+    ctx.fillStyle = grd;
+    ctx.beginPath(); ctx.roundRect(bx, by, bs, bs, 8); ctx.fill();
+    ctx.fillStyle = '#fff'; ctx.font = 'bold 15px Prompt'; ctx.textAlign = 'center';
+    ctx.fillText(p.m + ' kg', bx + bs/2, by + bs/2 + 5);
+    ctx.textAlign = 'left';
+    // ลูกศรแรง
+    const mid = by + bs/2;
+    if (p.F > 0){ arrow(ctx, bx - 14 - p.F*1.1, mid, bx - 6, mid, '#f87171', 4);
+      ctx.fillStyle = '#f87171'; ctx.font = '13px Prompt'; ctx.fillText('F = ' + p.F + ' N', bx - 14 - p.F*1.1, mid - 12); }
+    if (p.f > 0.5){ arrow(ctx, bx + bs + 6 + p.f*1.1, GY - 12, bx + bs + 6, GY - 12, '#fb923c', 4);
+      ctx.fillStyle = '#fb923c'; ctx.font = '13px Prompt'; ctx.fillText('f = ' + p.f.toFixed(0) + ' N', bx + bs + 12, GY - 24); }
+    arrow(ctx, bx + bs/2, by - 8, bx + bs/2, by - 44, '#34d399', 3);
+    ctx.fillStyle = '#34d399'; ctx.font = '12px Prompt'; ctx.fillText('N', bx + bs/2 + 7, by - 32);
+    // สถานะ
+    ctx.font = 'bold 16px Prompt';
+    if (p.a === 0 && v < 0.01){ ctx.fillStyle = '#fbbf24';
+      ctx.fillText(p.F > 0 ? '🔒 แรงยังไม่ชนะแรงเสียดทานสถิต (สูงสุด ' + p.fmax.toFixed(0) + ' N) — กล่องไม่ขยับ' : 'ปรับแรง F แล้วกดผลัก!', 30, 36); }
+    else { ctx.fillStyle = '#34d399';
+      ctx.fillText('🚀 กล่องเคลื่อนที่! a = ' + p.a.toFixed(1) + ' m/s² · ระยะสะสม ' + dist.toFixed(1) + ' m', 30, 36); }
+  }
+  reset();
+  return {toggle, reset};
+})();
+
+/* ================== SIM 4 : โพรเจกไทล์ ================== */
+const sim4 = (()=>{
+  const cv = document.getElementById('simCv4'), ctx = cv.getContext('2d');
+  const GY = 330, X0 = 60, g = 9.8;
+  const SX = (880 - X0) / 280, SY = (GY - 30) / 135;
+  let ball = null, run = false, last = 0, oldTrails = [];
+  const uEl = bindRange('s4u','s4uOut', drawAll);
+  const angEl = bindRange('s4ang','s4angOut', drawAll);
+  function fire(){
+    simUsed(4);
+    const u = +uEl.value, th = +angEl.value * Math.PI/180;
+    if (ball && ball.trail.length > 1) oldTrails.push(ball.trail);
+    if (oldTrails.length > 4) oldTrails.shift();
+    ball = { t:0, x:0, y:0, vx:u*Math.cos(th), vy:u*Math.sin(th), trail:[] };
+    document.getElementById('s4range').textContent = (u*u*Math.sin(2*th)/g).toFixed(1) + ' m';
+    document.getElementById('s4hmax').textContent = (u*u*Math.sin(th)*Math.sin(th)/(2*g)).toFixed(1) + ' m';
+    document.getElementById('s4time').textContent = (2*u*Math.sin(th)/g).toFixed(2) + ' s';
+    run = true; last = performance.now(); requestAnimationFrame(tick);
+  }
+  function reset(){ run = false; ball = null; oldTrails = [];
+    ['s4range','s4hmax','s4time'].forEach(id=>document.getElementById(id).textContent = '— m');
+    document.getElementById('s4time').textContent = '— s';
+    drawAll(); }
+  function tick(now){
+    if (!run) return;
+    let dt = Math.min((now-last)/1000, 0.05); last = now;
+    dt *= 1.6; // เร่งเวลาให้ดูสนุก
+    ball.vy -= g*dt; ball.x += ball.vx*dt; ball.y += ball.vy*dt; ball.t += dt;
+    if (ball.y <= 0 && ball.vy < 0){ ball.y = 0; run = false; }
+    ball.trail.push({x:ball.x, y:ball.y});
+    drawAll();
+    if (run) requestAnimationFrame(tick);
+  }
+  function px(x){ return X0 + x*SX; }
+  function py(y){ return GY - y*SY; }
+  function drawTrail(tr, color){
+    ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.beginPath();
+    tr.forEach((p,i)=> i ? ctx.lineTo(px(p.x), py(p.y)) : ctx.moveTo(px(p.x), py(p.y)));
+    ctx.stroke();
+  }
+  function drawAll(){
+    ctx.clearRect(0,0,900,360);
+    ctx.fillStyle = '#0d1626'; ctx.fillRect(0,0,900,360);
+    ctx.fillStyle = '#1e3a2f'; ctx.fillRect(0, GY, 900, 30);
+    ctx.fillStyle = '#5a6c99'; ctx.font = '11px Sarabun'; ctx.textAlign = 'center';
+    for (let m=0; m<=280; m+=40){ ctx.fillRect(px(m)-1, GY, 2, 8); ctx.fillText(m + ' m', px(m), GY + 22); }
+    ctx.textAlign = 'left';
+    // ปืนใหญ่
+    const th = +angEl.value * Math.PI/180;
+    ctx.save(); ctx.translate(X0, GY); ctx.rotate(-th);
+    ctx.fillStyle = '#64748b'; ctx.fillRect(0, -7, 46, 14); ctx.restore();
+    ctx.beginPath(); ctx.arc(X0, GY, 16, Math.PI, 0); ctx.fillStyle = '#475569'; ctx.fill();
+    oldTrails.forEach(tr=>drawTrail(tr, 'rgba(148,163,255,.25)'));
+    if (ball){
+      drawTrail(ball.trail, '#22d3ee');
+      ctx.font = '22px serif'; ctx.textAlign = 'center';
+      ctx.fillText('⚫', px(ball.x), py(ball.y) + 7);
+      ctx.textAlign = 'left';
+    }
+  }
+  drawAll();
+  return {fire, reset};
+})();
+
+/* ================== SIM 5 : แรงดึงดูดระหว่างมวล ================== */
+const sim5 = (()=>{
+  const cv = document.getElementById('simCv5'), ctx = cv.getContext('2d');
+  let used = false;
+  function mark(){ if (!used){ used = true; simUsed(5); } }
+  const m1El = bindRange('s5m1','s5m1Out', ()=>{ mark(); draw(); });
+  const m2El = bindRange('s5m2','s5m2Out', ()=>{ mark(); draw(); });
+  const rEl  = bindRange('s5r','s5rOut',  ()=>{ mark(); draw(); });
+  function fmt(F){
+    const e = Math.floor(Math.log10(F));
+    const m = (F / Math.pow(10, e)).toFixed(2);
+    return m + ' × 10' + String(e).split('').map(d=>'⁰¹²³⁴⁵⁶⁷⁸⁹'[+d]||'⁻').join('') + ' N';
+  }
+  function draw(){
+    const m1 = +m1El.value, m2 = +m2El.value, r = +rEl.value;
+    const F = 6.67e25 * m1 * m2 / (r*r);
+    document.getElementById('s5F').textContent = fmt(F);
+    ctx.clearRect(0,0,900,320);
+    ctx.fillStyle = '#0a0f1e'; ctx.fillRect(0,0,900,320);
+    ctx.fillStyle = '#e6ecff';
+    for (let i=0;i<60;i++) ctx.fillRect((i*151)%900, (i*83)%320, 1.4, 1.4);
+    const cy = 160, gap = r * 16;
+    const x1 = 450 - gap/2, x2 = 450 + gap/2;
+    const R1 = 14 + Math.cbrt(m1)*9, R2 = 14 + Math.cbrt(m2)*9;
+    // เส้นระยะ r
+    ctx.strokeStyle = 'rgba(148,163,255,.4)'; ctx.setLineDash([6,6]); ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(x1, cy + 74); ctx.lineTo(x2, cy + 74); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle = '#93a3c8'; ctx.font = '13px Prompt'; ctx.textAlign = 'center';
+    ctx.fillText('r = ' + r + ' × 10⁶ m', 450, cy + 94);
+    // ดาว
+    function planet(x, R, c1, c2, label){
+      const grd = ctx.createRadialGradient(x - R/3, cy - R/3, R/5, x, cy, R);
+      grd.addColorStop(0, c1); grd.addColorStop(1, c2);
+      ctx.beginPath(); ctx.arc(x, cy, R, 0, 7); ctx.fillStyle = grd; ctx.fill();
+      ctx.fillStyle = '#fff'; ctx.font = 'bold 13px Prompt';
+      ctx.fillText(label, x, cy + R + 20);
+    }
+    planet(x1, R1, '#a5b4fc', '#4338ca', 'm₁ = ' + m1 + ' × 10²⁴ kg');
+    planet(x2, R2, '#67e8f9', '#0e7490', 'm₂ = ' + m2 + ' × 10²⁴ kg');
+    // ลูกศรแรง (ยาวตามขนาด F)
+    const len = Math.max(18, Math.min(130, F / 3e24));
+    arrow(ctx, x1 + R1 + 4, cy, x1 + R1 + 4 + len, cy, '#f87171', 4);
+    arrow(ctx, x2 - R2 - 4, cy, x2 - R2 - 4 - len, cy, '#f87171', 4);
+    ctx.fillStyle = '#f87171'; ctx.font = 'bold 14px Prompt';
+    ctx.fillText('F', x1 + R1 + len/2, cy - 14);
+    ctx.fillText('F', x2 - R2 - len/2, cy - 14);
+    ctx.textAlign = 'left';
+    ctx.fillStyle = '#fbbf24'; ctx.font = '14px Prompt';
+    ctx.fillText('แรงทั้งสองข้างขนาดเท่ากันเสมอ (กฎข้อ 3)', 30, 34);
+  }
+  draw();
+  return {draw};
+})();
+
+/* ================== SIM 6 : แรงลัพธ์ของแรงสองแรง ================== */
+const sim6 = (()=>{
+  const cv = document.getElementById('simCv6'), ctx = cv.getContext('2d');
+  let used = false;
+  function mark(){ if (!used){ used = true; simUsed(6); } }
+  const f1El = bindRange('s6f1','s6f1Out', ()=>{ mark(); draw(); });
+  const f2El = bindRange('s6f2','s6f2Out', ()=>{ mark(); draw(); });
+  const thEl = bindRange('s6th','s6thOut', ()=>{ mark(); draw(); });
+  const OX = 300, OY = 270, SC = 1.9;   // จุดกำเนิดและสเกล px ต่อ N
+  function draw(){
+    const F1 = +f1El.value, F2 = +f2El.value, th = +thEl.value * Math.PI/180;
+    const R = Math.sqrt(F1*F1 + F2*F2 + 2*F1*F2*Math.cos(th));
+    const alpha = Math.atan2(F2*Math.sin(th), F1 + F2*Math.cos(th));
+    document.getElementById('s6R').textContent = R.toFixed(1) + ' N';
+    document.getElementById('s6ang').textContent = (alpha*180/Math.PI).toFixed(0) + '°';
+    ctx.clearRect(0,0,900,360);
+    ctx.fillStyle = '#0a0f1e'; ctx.fillRect(0,0,900,360);
+    // ปลายเวกเตอร์ (แกน y จอคว่ำลง จึงใช้ -sin)
+    const x1 = OX + F1*SC,                 y1 = OY;
+    const x2 = OX + F2*SC*Math.cos(th),    y2 = OY - F2*SC*Math.sin(th);
+    const xr = OX + (x1-OX) + (x2-OX),     yr = OY + (y1-OY) + (y2-OY);
+    // รูปสี่เหลี่ยมด้านขนาน (เส้นประ)
+    ctx.strokeStyle = 'rgba(148,163,255,.45)'; ctx.setLineDash([6,6]); ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(xr,yr); ctx.lineTo(x2,y2); ctx.stroke();
+    ctx.setLineDash([]);
+    // ส่วนโค้งแสดงมุม θ
+    ctx.strokeStyle = '#a855f7'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(OX, OY, 34, -th, 0); ctx.stroke();
+    ctx.fillStyle = '#d8b4fe'; ctx.font = '14px Prompt';
+    ctx.fillText('θ = ' + thEl.value + '°', OX + 42*Math.cos(th/2) + 4, OY - 42*Math.sin(th/2));
+    // เวกเตอร์แรง
+    arrow(ctx, OX, OY, x1, y1, '#818cf8', 4);
+    arrow(ctx, OX, OY, x2, y2, '#22d3ee', 4);
+    arrow(ctx, OX, OY, xr, yr, '#fbbf24', 5);
+    ctx.font = 'bold 15px Prompt';
+    ctx.fillStyle = '#818cf8'; ctx.fillText('F₁ = ' + F1 + ' N', x1 + 10, y1 + 5);
+    ctx.fillStyle = '#22d3ee'; ctx.fillText('F₂ = ' + F2 + ' N', x2 + 8, y2 - 8);
+    ctx.fillStyle = '#fbbf24'; ctx.fillText('ΣF = ' + R.toFixed(1) + ' N', xr + 10, yr - 6);
+    // จุดกำเนิด
+    ctx.beginPath(); ctx.arc(OX, OY, 5, 0, 7); ctx.fillStyle = '#fff'; ctx.fill();
+    // สูตร
+    ctx.fillStyle = '#93a3c8'; ctx.font = '14px Prompt';
+    ctx.fillText('ΣF = √(F₁² + F₂² + 2F₁F₂cos θ) = ' + R.toFixed(1) + ' N', 30, 34);
+  }
+  draw();
+  return {draw};
+})();
+</script>
+
+<script>
+/* ==================================================================
+   📌 คลังข้อสอบ — วิธีเพิ่มโจทย์ใหม่ (ครู/ผู้ดูแลแก้ตรงนี้ได้เลย)
+   คัดลอกรูปแบบนี้ไปต่อท้ายระดับที่ต้องการ (easy / med / hard):
+
+   {q:'โจทย์คำถาม?', c:['ตัวเลือก ก','ตัวเลือก ข','ตัวเลือก ค','ตัวเลือก ง'],
+    a:1,            ← ดัชนีข้อถูก (0=ก, 1=ข, 2=ค, 3=ง)
+    x:'คำอธิบายเฉลย'},
+
+   ระบบจะสุ่มหยิบ 10 ข้อจากคลังของแต่ละระดับโดยอัตโนมัติ
+   เพิ่มกี่ข้อก็ได้ ไม่ต้องแก้โค้ดส่วนอื่นเลย
+   (แบบฝึก FBD ก็เพิ่มสถานการณ์ได้ที่ FBD_BANK ด้านล่างสุดของไฟล์)
+================================================================== */
+const QUESTIONS = {
+easy: [
+ {q:'ข้อใดเป็น "ปริมาณเวกเตอร์"?', c:['ระยะทาง','อัตราเร็ว','การกระจัด','เวลา'], a:2,
+  x:'การกระจัดมีทั้งขนาดและทิศทาง จึงเป็นเวกเตอร์ ส่วนระยะทาง อัตราเร็ว และเวลา เป็นสเกลาร์'},
+ {q:'หน่วยของแรงในระบบ SI คือข้อใด?', c:['กิโลกรัม (kg)','นิวตัน (N)','จูล (J)','วัตต์ (W)'], a:1,
+  x:'แรงมีหน่วยเป็นนิวตัน (N) โดย 1 N = 1 kg·m/s²'},
+ {q:'กฎการเคลื่อนที่ข้อที่ 1 ของนิวตัน มีอีกชื่อว่าอะไร?', c:['กฎความเร่ง','กฎความเฉื่อย','กฎกิริยา-ปฏิกิริยา','กฎแรงโน้มถ่วง'], a:1,
+  x:'กฎข้อ 1 คือกฎความเฉื่อย — วัตถุรักษาสภาพการเคลื่อนที่เดิมเมื่อแรงลัพธ์เป็นศูนย์'},
+ {q:'เดินไปทางทิศตะวันออก 4 m แล้วเดินกลับทางทิศตะวันตก 4 m การกระจัดมีค่าเท่าใด?', c:['8 m','4 m','0 m','16 m'], a:2,
+  x:'จุดเริ่มต้นและจุดสุดท้ายเป็นจุดเดียวกัน การกระจัดจึงเป็นศูนย์ (แต่ระยะทาง = 8 m)'},
+ {q:'"ความเร่ง" คือข้อใด?', c:['อัตราการเปลี่ยนตำแหน่ง','อัตราการเปลี่ยนความเร็ว','ระยะทางต่อเวลา','แรงต่อพื้นที่'], a:1,
+  x:'ความเร่ง a = Δv/Δt คืออัตราการเปลี่ยนแปลงความเร็วต่อหนึ่งหน่วยเวลา'},
+ {q:'วัตถุตกแบบเสรีที่ผิวโลก มีความเร่งประมาณเท่าใด?', c:['1.6 m/s²','3.7 m/s²','9.8 m/s²','98 m/s²'], a:2,
+  x:'ความเร่งโน้มถ่วงที่ผิวโลก g ≈ 9.8 m/s² ทิศลงเสมอ'},
+ {q:'กฎข้อที่ 2 ของนิวตัน เขียนเป็นสมการได้ตามข้อใด?', c:['ΣF = ma','F = mg เท่านั้น','ΣF = 0','F = μN'], a:0,
+  x:'กฎข้อ 2: แรงลัพธ์ = มวล × ความเร่ง (ΣF = ma)'},
+ {q:'แรงกิริยาและแรงปฏิกิริยา มีลักษณะตามข้อใด?', c:['ขนาดเท่ากัน ทิศเดียวกัน','ขนาดเท่ากัน ทิศตรงข้าม','ขนาดต่างกัน ทิศตรงข้าม','กระทำต่อวัตถุก้อนเดียวกัน'], a:1,
+  x:'กฎข้อ 3: แรงคู่กิริยา-ปฏิกิริยาขนาดเท่ากัน ทิศตรงข้าม และกระทำต่อวัตถุคนละก้อน'},
+ {q:'น้ำหนักของวัตถุ (W) คำนวณจากสูตรใด?', c:['W = m/g','W = mg','W = m + g','W = g/m'], a:1,
+  x:'น้ำหนักคือแรงโน้มถ่วงที่กระทำต่อวัตถุ W = mg มีหน่วยเป็นนิวตัน'},
+ {q:'พื้นที่ใต้กราฟความเร็ว-เวลา (v-t) บอกปริมาณใด?', c:['ความเร่ง','แรง','การกระจัด','มวล'], a:2,
+  x:'พื้นที่ใต้กราฟ v-t = การกระจัด ส่วนความชันของกราฟ v-t = ความเร่ง'},
+ {q:'วัตถุที่มีมวลมาก จะมีสมบัติตามข้อใด?', c:['ความเฉื่อยมาก เปลี่ยนสภาพการเคลื่อนที่ยาก','ความเฉื่อยน้อย เปลี่ยนสภาพการเคลื่อนที่ง่าย','ไม่มีความเฉื่อย','ความเฉื่อยเท่ากับวัตถุมวลน้อย'], a:0,
+  x:'มวลเป็นปริมาณที่บอกความเฉื่อย — มวลมาก ความเฉื่อยมาก จึงต้านการเปลี่ยนสภาพการเคลื่อนที่ได้มาก'},
+ {q:'แรงแนวฉาก (N) ที่พื้นกระทำต่อวัตถุ มีทิศทางอย่างไร?', c:['ขนานกับผิวสัมผัส','ตั้งฉากกับผิวสัมผัส พุ่งออกจากผิว','ดิ่งลงเสมอ','ตามทิศการเคลื่อนที่'], a:1,
+  x:'แรงแนวฉาก (normal force) ตั้งฉากกับผิวสัมผัสและพุ่งออกจากผิวเสมอ'},
+ {q:'การหาแรงลัพธ์ด้วยวิธีเขียนเวกเตอร์แบบ "หางต่อหัว" แรงลัพธ์คือเวกเตอร์ใด?', c:['จากหัวของแรงแรกไปหางของแรงสุดท้าย','จากหางของแรงแรกไปหัวของแรงสุดท้าย','เส้นทแยงมุมของสี่เหลี่ยมจัตุรัส','แรงที่ยาวที่สุด'], a:1,
+  x:'ต่อหางของแรงถัดไปที่หัวของแรงก่อนหน้า แล้วลากเวกเตอร์จากหางของแรงแรกไปยังหัวของแรงสุดท้าย คือแรงลัพธ์'},
+],
+med: [
+ {q:'รถเปลี่ยนความเร็วจาก 10 m/s เป็น 30 m/s ในเวลา 5 s ความเร่งเฉลี่ยเท่าใด?', c:['2 m/s²','4 m/s²','6 m/s²','8 m/s²'], a:1,
+  x:'a = (v − u)/t = (30 − 10)/5 = 4 m/s²'},
+ {q:'วัตถุมวล 2 kg ถูกแรงลัพธ์ 10 N กระทำ จะมีความเร่งเท่าใด?', c:['0.2 m/s²','5 m/s²','12 m/s²','20 m/s²'], a:1,
+  x:'a = ΣF/m = 10/2 = 5 m/s²'},
+ {q:'นักกีฬาวิ่ง 100 m ใช้เวลา 20 s อัตราเร็วเฉลี่ยเท่าใด?', c:['5 m/s','10 m/s','20 m/s','2000 m/s'], a:0,
+  x:'อัตราเร็วเฉลี่ย = ระยะทาง/เวลา = 100/20 = 5 m/s'},
+ {q:'ปล่อยวัตถุให้ตกแบบเสรี 3 s (g = 10 m/s²) ความเร็วขณะนั้นเป็นเท่าใด?', c:['3.3 m/s','10 m/s','30 m/s','90 m/s'], a:2,
+  x:'v = u + gt = 0 + (10)(3) = 30 m/s'},
+ {q:'วัตถุเริ่มจากหยุดนิ่ง เคลื่อนที่ด้วยความเร่ง 2 m/s² นาน 4 s ได้ระยะทางเท่าใด?', c:['8 m','16 m','32 m','4 m'], a:1,
+  x:'s = ut + ½at² = 0 + ½(2)(4²) = 16 m'},
+ {q:'วัตถุมวล 5 kg มีน้ำหนักเท่าใดบนโลก? (g = 9.8 m/s²)', c:['5 N','9.8 N','49 N','490 N'], a:2,
+  x:'W = mg = 5 × 9.8 = 49 N'},
+ {q:'แรง 20 N และ 15 N กระทำต่อวัตถุเดียวกันในทิศตรงข้าม แรงลัพธ์มีขนาดเท่าใด?', c:['35 N','5 N','300 N','0 N'], a:1,
+  x:'ทิศตรงข้ามนำมาหักลบกัน: 20 − 15 = 5 N ทิศตามแรงมาก'},
+ {q:'กราฟ v-t เป็นเส้นตรงขนานแกนเวลา แสดงว่าวัตถุเคลื่อนที่อย่างไร?', c:['หยุดนิ่ง','ความเร็วคงตัว (a = 0)','ความเร่งคงตัวไม่เป็นศูนย์','ความเร่งเพิ่มขึ้น'], a:1,
+  x:'v ไม่เปลี่ยนตามเวลา → ความเร็วคงตัว → ความเร่งเป็นศูนย์'},
+ {q:'กล่องเคลื่อนที่บนพื้น มีแรงแนวฉาก N = 50 N และ μk = 0.2 แรงเสียดทานจลน์เท่าใด?', c:['10 N','25 N','52 N','250 N'], a:0,
+  x:'fk = μkN = 0.2 × 50 = 10 N'},
+ {q:'ขว้างลูกบอลขึ้นแนวดิ่งด้วยความเร็ว 20 m/s (g = 10 m/s²) ใช้เวลากี่วินาทีถึงจุดสูงสุด?', c:['1 s','2 s','4 s','10 s'], a:1,
+  x:'ที่จุดสูงสุด v = 0 → t = u/g = 20/10 = 2 s'},
+ {q:'แรง 6 N และ 8 N กระทำต่อวัตถุในทิศตั้งฉากกัน แรงลัพธ์มีขนาดเท่าใด?', c:['2 N','10 N','14 N','48 N'], a:1,
+  x:'ตั้งฉากกันใช้พีทาโกรัส: √(6² + 8²) = √100 = 10 N'},
+ {q:'วัตถุมวล 3 kg แขวนนิ่งด้วยเชือกเส้นเดียว (g = 10 m/s²) แรงตึงเชือกเท่าใด?', c:['3 N','10 N','30 N','300 N'], a:2,
+  x:'วัตถุสมดุล ΣF = 0 → T = mg = 3 × 10 = 30 N'},
+ {q:'แรง 5 N และ 12 N กระทำต่อวัตถุเดียวกัน ปรับมุมระหว่างแรงได้ แรงลัพธ์จะมีค่า "มากที่สุด" เท่าใด?', c:['7 N','13 N','17 N','60 N'], a:2,
+  x:'แรงลัพธ์มากสุดเมื่อสองแรงทิศเดียวกัน (มุม 0°) = 5 + 12 = 17 N (และน้อยสุด 7 N เมื่อมุม 180°)'},
+],
+hard: [
+ {q:'วัตถุมีความเร็วต้น 10 m/s ความเร่ง 2 m/s² เคลื่อนที่นาน 5 s ได้การกระจัดเท่าใด?', c:['50 m','60 m','75 m','100 m'], a:2,
+  x:'s = ut + ½at² = (10)(5) + ½(2)(25) = 50 + 25 = 75 m'},
+ {q:'วัตถุเริ่มจากหยุดนิ่ง เร่ง 5 m/s² ไปตามระยะทาง 10 m ความเร็วปลายเป็นเท่าใด?', c:['5 m/s','10 m/s','50 m/s','100 m/s'], a:1,
+  x:'v² = u² + 2as = 0 + 2(5)(10) = 100 → v = 10 m/s'},
+ {q:'ปล่อยก้อนหินจากตึกสูง 45 m (g = 10 m/s²) ใช้เวลากี่วินาทีถึงพื้น?', c:['2 s','3 s','4.5 s','9 s'], a:1,
+  x:'s = ½gt² → 45 = ½(10)t² → t² = 9 → t = 3 s'},
+ {q:'กล่องมวล 4 kg ถูกแรงดึง 30 N มีแรงเสียดทาน 10 N ต้าน ความเร่งเป็นเท่าใด?', c:['2.5 m/s²','5 m/s²','7.5 m/s²','10 m/s²'], a:1,
+  x:'ΣF = 30 − 10 = 20 N → a = 20/4 = 5 m/s²'},
+ {q:'คนมวล 50 kg ยืนในลิฟต์ที่เร่งขึ้นด้วย 2 m/s² (g = 10 m/s²) แรงที่พื้นลิฟต์ดันเท้าเป็นเท่าใด?', c:['400 N','500 N','600 N','100 N'], a:2,
+  x:'N − mg = ma → N = m(g + a) = 50(10 + 2) = 600 N (รู้สึก "หนักขึ้น" ขณะลิฟต์เร่งขึ้น)'},
+ {q:'รถเร่งจาก 0 ถึง 20 m/s ใน 4 s แล้ววิ่งคงที่ต่ออีก 6 s ระยะทางรวมเป็นเท่าใด?', c:['120 m','140 m','160 m','200 m'], a:2,
+  x:'ช่วงเร่ง (สามเหลี่ยม) = ½(4)(20) = 40 m + ช่วงคงที่ = 20 × 6 = 120 m → รวม 160 m'},
+ {q:'ถ้าระยะห่างระหว่างมวลสองก้อนเพิ่มเป็น 2 เท่า แรงดึงดูดระหว่างมวลจะเป็นอย่างไร?', c:['เพิ่มเป็น 2 เท่า','ลดเหลือ 1/2','ลดเหลือ 1/4','เท่าเดิม'], a:2,
+  x:'F ∝ 1/r² → ระยะ 2 เท่า → แรงเหลือ 1/2² = 1/4 ของเดิม'},
+ {q:'แรง 3 N และ 4 N กระทำต่อวัตถุในทิศตั้งฉากกัน แรงลัพธ์มีขนาดเท่าใด?', c:['1 N','5 N','7 N','12 N'], a:1,
+  x:'ตั้งฉากกันใช้พีทาโกรัส: √(3² + 4²) = √25 = 5 N'},
+ {q:'ขว้างลูกบอลขึ้นแนวดิ่งด้วยความเร็ว 20 m/s (g = 10 m/s²) ขึ้นได้สูงสุดเท่าใด?', c:['10 m','20 m','40 m','80 m'], a:1,
+  x:'v² = u² − 2gs → 0 = 400 − 20s → s = 20 m'},
+ {q:'รถมวล 1,000 kg วิ่งด้วยความเร็ว 20 m/s เบรกจนหยุดใน 4 s ขนาดแรงเบรกเฉลี่ยเป็นเท่าใด?', c:['2,500 N','5,000 N','10,000 N','20,000 N'], a:1,
+  x:'a = (0 − 20)/4 = −5 m/s² → F = ma = 1000 × 5 = 5,000 N ทิศต้านการเคลื่อนที่'},
+ {q:'คนมวล 60 kg ยืนบนตาชั่งในลิฟต์ที่เร่ง "ลง" ด้วย 2 m/s² (g = 10 m/s²) ตาชั่งอ่านค่าแรงเท่าใด?', c:['720 N','600 N','480 N','120 N'], a:2,
+  x:'ลิฟต์เร่งลง: N = m(g − a) = 60(10 − 2) = 480 N — รู้สึกเบากว่าปกติ'},
+ {q:'มวล 2 kg และ 3 kg ผูกกันด้วยเชือกเบาบนพื้นลื่น ออกแรง 20 N ดึงก้อน 3 kg แรงตึงเชือกที่ดึงก้อน 2 kg เท่าใด?', c:['4 N','8 N','12 N','20 N'], a:1,
+  x:'ทั้งระบบ: a = 20/(2+3) = 4 m/s² → คิดเฉพาะก้อน 2 kg: T = 2 × 4 = 8 N'},
+ {q:'แรงขนาด 10 N สองแรง ทำมุม 60° ต่อกัน แรงลัพธ์มีขนาดเท่าใด?', c:['10 N','10√2 N','10√3 N','20 N'], a:2,
+  x:'ΣF = √(10² + 10² + 2(10)(10)cos60°) = √300 = 10√3 ≈ 17.3 N'},
+ {q:'ดาวเคราะห์ดวงหนึ่งมีมวลเท่าโลก แต่รัศมีเป็น 2 เท่าของโลก ความเร่งโน้มถ่วงที่ผิวดาวเป็นกี่เท่าของโลก?', c:['เท่าเดิม','1/2 เท่า','1/4 เท่า','4 เท่า'], a:2,
+  x:'g = GM/R² → รัศมี 2 เท่า (มวลเท่าเดิม) → g เหลือ 1/2² = 1/4 เท่าของโลก'},
+]};
+
+/* ================== QUIZ ENGINE ================== */
+const quiz = (()=>{
+  const XP_PER = {easy:10, med:15, hard:20};
+  const LV_TH = {easy:'ระดับง่าย 🌱', med:'ระดับปานกลาง 🔥', hard:'ระดับยาก 💎'};
+  let level = null, items = [], idx = 0, score = 0, answered = false;
+
+  function shuffle(arr){
+    const a = arr.slice();
+    for (let i = a.length-1; i > 0; i--){
+      const j = (Math.random()*(i+1))|0; [a[i],a[j]] = [a[j],a[i]];
+    }
+    return a;
+  }
+  function start(lv){
+    level = lv; idx = 0; score = 0;
+    // สุ่มลำดับข้อ และสุ่มลำดับตัวเลือกของแต่ละข้อ
+    items = shuffle(QUESTIONS[lv]).slice(0, 10).map(q=>{
+      const order = shuffle([0,1,2,3].slice(0, q.c.length));
+      return { q:q.q, x:q.x, c:order.map(i=>q.c[i]), a:order.indexOf(q.a) };
+    });
+    document.getElementById('quizLevels').style.display = 'none';
+    document.getElementById('quizResult').style.display = 'none';
+    document.getElementById('quizPlay').style.display = 'block';
+    render();
+  }
+  function render(){
+    answered = false;
+    const it = items[idx];
+    document.getElementById('qNum').textContent = LV_TH[level] + ' · ข้อ ' + (idx+1) + '/' + items.length;
+    document.getElementById('qScore').textContent = 'คะแนน: ' + score;
+    document.getElementById('qBar').style.width = (idx/items.length*100) + '%';
+    document.getElementById('qText').textContent = it.q;
+    const abc = ['ก','ข','ค','ง'];
+    document.getElementById('qOpts').innerHTML = it.c.map((c,i)=>
+      '<button class="q-opt" onclick="quiz.answer(' + i + ')"><span class="abc">' + abc[i] + '</span>' + c + '</button>'
+    ).join('');
+    const ex = document.getElementById('qExplain');
+    ex.classList.remove('show'); ex.textContent = '';
+    document.getElementById('qNext').style.visibility = 'hidden';
+    document.getElementById('qNext').textContent = idx === items.length-1 ? '🏁 ดูผลคะแนน' : 'ข้อถัดไป →';
+  }
+  function answer(i){
+    if (answered) return;
+    answered = true;
+    const it = items[idx];
+    const btns = document.querySelectorAll('#qOpts .q-opt');
+    btns.forEach(b=>b.disabled = true);
+    btns[it.a].classList.add('right');
+    const ex = document.getElementById('qExplain');
+    if (i === it.a){
+      score++;
+      addXP(XP_PER[level], 'ตอบถูก!');
+      ex.innerHTML = '✅ <b>ถูกต้อง!</b> ' + it.x;
+    } else {
+      btns[i].classList.add('wrong');
+      ex.innerHTML = '❌ <b>ยังไม่ถูก</b> — ' + it.x;
+    }
+    ex.classList.add('show');
+    document.getElementById('qScore').textContent = 'คะแนน: ' + score;
+    document.getElementById('qBar').style.width = ((idx+1)/items.length*100) + '%';
+    document.getElementById('qNext').style.visibility = 'visible';
+  }
+  function next(){
+    if (idx < items.length - 1){ idx++; render(); }
+    else finish();
+  }
+  function finish(){
+    document.getElementById('quizPlay').style.display = 'none';
+    document.getElementById('quizResult').style.display = 'block';
+    const pct = score / items.length;
+    const em = pct === 1 ? '🏆' : pct >= 0.8 ? '🎉' : pct >= 0.5 ? '💪' : '📚';
+    const title = pct === 1 ? 'สมบูรณ์แบบ!' : pct >= 0.8 ? 'ยอดเยี่ยม — ผ่านระดับนี้!' : pct >= 0.5 ? 'เกือบแล้ว สู้อีกนิด!' : 'ไม่เป็นไร กลับไปทบทวนก่อนนะ';
+    const msg = pct >= 0.8 ? 'คุณเข้าใจเนื้อหาระดับนี้ดีมาก ลองท้าทายระดับถัดไปเลย!' :
+                'เกณฑ์ผ่านคือ 8/10 — อ่านเฉลยของข้อที่ผิด แล้วกลับมาลองใหม่ได้ไม่จำกัด';
+    document.getElementById('rEmoji').textContent = em;
+    document.getElementById('rTitle').textContent = title;
+    document.getElementById('rScore').textContent = score;
+    document.getElementById('rStars').textContent = pct === 1 ? '★★★' : pct >= 0.8 ? '★★☆' : pct >= 0.5 ? '★☆☆' : '☆☆☆';
+    document.getElementById('rMsg').textContent = msg;
+    if (score > S.best[level]){ S.best[level] = score; save(); toast('🏅 สถิติใหม่ระดับนี้: ' + score + '/10'); }
+    if (pct >= 0.8) confettiBurst();
+    if (typeof cloudQuizDone === 'function') cloudQuizDone();   // นับเข้าสถิติรวม
+    checkBadges(); refreshHUD();
+  }
+  function retry(){ start(level); }
+  function quit(){
+    document.getElementById('quizPlay').style.display = 'none';
+    document.getElementById('quizResult').style.display = 'none';
+    document.getElementById('quizLevels').style.display = 'grid';
+    refreshHUD();
+  }
+  return {start, answer, next, retry, quit};
+})();
+
+/* ================== INIT ================== */
+refreshHUD();
+</script>
+
+<!-- Firebase SDK (โหลดไม่สำเร็จ = โหมดออฟไลน์อัตโนมัติ) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+<script>
+/* ==================================================================
+   ☁️ ระบบคลาวด์ (ล็อกอิน Google + สถิติรวมทุกคน)
+   📌 สำหรับครู: วางค่า config จาก Firebase Console ตรงนี้
+   (ดูขั้นตอนละเอียดในแอป หน้า "สถิติรวม" → สำหรับครู)
+================================================================== */
+const FIREBASE_CONFIG = {
+  apiKey:     "วางค่า-apiKey-ที่นี่",
+  authDomain: "วางค่า-authDomain-ที่นี่",
+  projectId:  "วางค่า-projectId-ที่นี่",
+  appId:      "วางค่า-appId-ที่นี่"
+};
+
+const cloud = { on:false, auth:null, db:null, user:null, timer:null };
+function cloudConfigured(){
+  return typeof firebase !== 'undefined' && FIREBASE_CONFIG.apiKey && FIREBASE_CONFIG.apiKey.indexOf('วางค่า') !== 0;
+}
+function inc(n){ return firebase.firestore.FieldValue.increment(n); }
+function gdoc(){ return cloud.db.collection('global').doc('stats'); }
+
+function initCloud(){
+  // นับการเข้าใช้ฝั่งเครื่องนี้เสมอ (ครั้งละ 1 ต่อการเปิดแอป)
+  if (!sessionStorage.getItem('pq_visited')){
+    sessionStorage.setItem('pq_visited', '1');
+    try{ localStorage.setItem('pq_dev_visits', String((+localStorage.getItem('pq_dev_visits') || 0) + 1)); }catch(e){}
+  }
+  if (!cloudConfigured()){ cloudRefreshStats(); return; }
+  try{
+    firebase.initializeApp(FIREBASE_CONFIG);
+    cloud.auth = firebase.auth();
+    cloud.db = firebase.firestore();
+    cloud.on = true;
+  }catch(e){ console.warn('Firebase init ล้มเหลว', e); cloudRefreshStats(); return; }
+
+  cloud.auth.onAuthStateChanged(async (u)=>{
+    cloud.user = u;
+    updateLoginUI();
+    // นับจำนวนครั้งเข้าใช้รวม (ครั้งเดียวต่อ session)
+    if (u && !sessionStorage.getItem('pq_cloud_visit')){
+      sessionStorage.setItem('pq_cloud_visit', '1');
+      gdoc().set({visits: inc(1)}, {merge:true}).catch(()=>{});
+    }
+    if (u && !u.isAnonymous){
+      const ref = cloud.db.collection('users').doc(u.uid);
+      try{
+        const snap = await ref.get();
+        if (snap.exists) mergeCloudState(snap.data());
+        else gdoc().set({users: inc(1)}, {merge:true}).catch(()=>{});
+      }catch(e){}
+      pushUserDoc();
+      refreshHUD();
+      toast('👋 สวัสดี ' + (u.displayName || 'ผู้เรียน') + '! สถิติจะซิงก์ขึ้นคลาวด์อัตโนมัติ');
+    }
+    cloudRefreshStats();
+  });
+  // ผู้ที่ไม่ล็อกอิน → นับเป็นผู้เยี่ยมชมนิรนาม (เพื่อนับ visits)
+  setTimeout(()=>{ if (!cloud.auth.currentUser) cloud.auth.signInAnonymously().catch(()=>{}); }, 800);
+}
+
+function mergeCloudState(d){
+  // รวมข้อมูลเครื่องนี้กับคลาวด์ โดยเก็บค่าที่ "ดีที่สุด" ของทั้งสองฝั่ง
+  const uni = (a,b)=>[...new Set([...(a||[]), ...(b||[])])];
+  S.read = uni(S.read, d.read); S.sims = uni(S.sims, d.sims);
+  S.qc = uni(S.qc, d.qc); S.badges = uni(S.badges, d.badges);
+  S.xp = Math.max(S.xp, d.xp || 0);
+  ['easy','med','hard'].forEach(k=>{ S.best[k] = Math.max(S.best[k], (d.best && d.best[k] !== undefined) ? d.best[k] : -1); });
+  if (d.fbd){ S.fbd.done = Math.max(S.fbd.done, d.fbd.done || 0); S.fbd.correct = Math.max(S.fbd.correct, d.fbd.correct || 0); }
+  try{ localStorage.setItem(LS, JSON.stringify(S)); }catch(e){}
+}
+
+function pushUserDoc(){
+  if (!cloud.on || !cloud.user || cloud.user.isAnonymous) return;
+  cloud.db.collection('users').doc(cloud.user.uid).set(Object.assign({
+    name: cloud.user.displayName || 'ผู้เรียน',
+    photo: cloud.user.photoURL || '',
+    updated: firebase.firestore.FieldValue.serverTimestamp()
+  }, JSON.parse(JSON.stringify(S))), {merge:true}).catch(()=>{});
+}
+
+/* hooks — ถูกเรียกจากระบบหลักของแอป */
+function cloudPush(){ // debounce 2 วิ กันเขียนถี่เกิน
+  if (!cloud.on || !cloud.user || cloud.user.isAnonymous) return;
+  clearTimeout(cloud.timer);
+  cloud.timer = setTimeout(pushUserDoc, 2000);
+}
+function cloudXP(n){ if (cloud.on && cloud.user) gdoc().set({xp: inc(n)}, {merge:true}).catch(()=>{}); }
+function cloudQuizDone(){ if (cloud.on && cloud.user) gdoc().set({quizzes: inc(1)}, {merge:true}).catch(()=>{}); }
+
+function cloudLogin(){
+  if (!cloudConfigured()){
+    toast('⚙️ ยังไม่ได้เชื่อมต่อระบบคลาวด์ — ดูวิธีตั้งค่าในหน้า "สถิติรวม"', true);
+    showPage('stats');
+    return;
+  }
+  const provider = new firebase.auth.GoogleAuthProvider();
+  cloud.auth.signInWithPopup(provider).catch(e=>{
+    if (location.protocol === 'file:')
+      toast('⚠️ การล็อกอิน Google ต้องเปิดแอปผ่านเว็บ (http/https) เช่น Firebase Hosting', true);
+    else toast('⚠️ ล็อกอินไม่สำเร็จ: ' + (e.code || e.message), true);
+  });
+}
+function cloudLogout(){
+  if (cloud.on) cloud.auth.signOut().then(()=>toast('ออกจากระบบแล้ว — ข้อมูลยังอยู่ในเครื่องนี้'));
+}
+function updateLoginUI(){
+  const box = document.getElementById('loginBox');
+  const u = cloud.user;
+  if (u && !u.isAnonymous){
+    box.innerHTML = '<div class="user-chip">' +
+      (u.photoURL ? '<img src="' + u.photoURL + '" alt="" referrerpolicy="no-referrer">' : '<span style="font-size:24px">👤</span>') +
+      '<div class="un">' + (u.displayName || 'ผู้เรียน') + '<br><span class="out" onclick="cloudLogout()">ออกจากระบบ</span></div></div>';
+  } else {
+    box.innerHTML = '<button class="btn sm" style="width:100%;justify-content:center" onclick="cloudLogin()">🔑 ล็อกอินด้วย Google</button>';
+  }
+}
+
+async function cloudRefreshStats(){
+  const box = document.getElementById('cloudState');
+  const fmt = (v)=> (v === undefined || v === null) ? '0' : Number(v).toLocaleString('th-TH');
+  if (!cloud.on){
+    box.innerHTML = '📴 <b>โหมดออฟไลน์</b> — ยังไม่ได้เชื่อมต่อคลาวด์ สถิติด้านล่างนับเฉพาะเครื่องนี้ · ครูสามารถเปิดใช้ระบบคลาวด์ได้ตามขั้นตอนด้านล่างสุดของหน้านี้';
+    document.getElementById('gVisits').textContent = fmt(localStorage.getItem('pq_dev_visits') || 1) + ' (เครื่องนี้)';
+    document.getElementById('gUsers').textContent = '—';
+    document.getElementById('gQuizzes').textContent = '—';
+    document.getElementById('gXP').textContent = fmt(S.xp) + ' (เครื่องนี้)';
+    return;
+  }
+  box.innerHTML = '☁️ <b>เชื่อมต่อคลาวด์แล้ว</b>' + (cloud.user && !cloud.user.isAnonymous ? ' — ล็อกอินเป็น ' + (cloud.user.displayName || '') : ' — ยังไม่ได้ล็อกอิน (สถิติส่วนตัวจะไม่ติดตามข้ามเครื่อง)');
+  try{
+    const g = await gdoc().get();
+    const d = g.exists ? g.data() : {};
+    document.getElementById('gVisits').textContent = fmt(d.visits);
+    document.getElementById('gUsers').textContent = fmt(d.users);
+    document.getElementById('gQuizzes').textContent = fmt(d.quizzes);
+    document.getElementById('gXP').textContent = fmt(d.xp);
+  }catch(e){}
+  try{
+    const qs = await cloud.db.collection('users').orderBy('xp','desc').limit(10).get();
+    const medals = ['🥇','🥈','🥉'];
+    let rows = ''; let i = 0;
+    qs.forEach(docu=>{
+      const d = docu.data();
+      rows += '<tr class="lb-row"><td style="width:46px;font-size:18px">' + (medals[i] || (i+1) + '.') + '</td>' +
+        '<td>' + (d.photo ? '<img src="' + d.photo + '" alt="" referrerpolicy="no-referrer">' : '') + (d.name || 'ผู้เรียน') + '</td>' +
+        '<td style="text-align:right;color:var(--gold);font-family:Prompt;font-weight:700">' + fmt(d.xp) + ' XP</td></tr>';
+      i++;
+    });
+    document.getElementById('lbTable').innerHTML = rows || '<tr><td style="color:var(--muted)">ยังไม่มีผู้เรียนล็อกอิน — เป็นคนแรกสิ!</td></tr>';
+  }catch(e){}
+}
+</script>
+
+<script>
+/* ==================================================================
+   🎯 แบบฝึกแผนภาพวัตถุอิสระ (FBD) — 4 โหมด
+   📌 วิธีเพิ่มสถานการณ์ใหม่: เพิ่มออบเจ็กต์ใน FBD_BANK ตามรูปแบบ
+   { id:'รหัส', title:'ชื่อสถานการณ์', scene:'ground|hang|elevator|air|incline',
+     motion:'right|up|down|downslope|null',  ← ทิศที่วัตถุกำลังเคลื่อนที่ (โชว์เป็นลูกศรประ)
+     applied:'right',                        ← มีแรงคนดึง/ผลักไหม (วาดในรูปสถานการณ์)
+     accel:'up|down',                        ← สำหรับฉากลิฟต์
+     forces:{W:'down', N:'up', ...},         ← แรงที่กระทำจริง + ทิศ (W,N,T,F,f)
+     rel:{N:1.35},                           ← ความยาวลูกศรสัมพัทธ์ (1 = ปกติ) ใช้โหมดจับคู่
+     cmp:{q:'คำถามเทียบขนาด', c:['ก','ข','ค'], a:1, x:'เฉลย'} }
+================================================================== */
+const FBD_FORCES = {
+  W:{label:'น้ำหนัก mg', color:'#f87171'},
+  N:{label:'แรงแนวฉาก N', color:'#34d399'},
+  T:{label:'แรงตึงเชือก T', color:'#fbbf24'},
+  F:{label:'แรงดึง/ผลัก F', color:'#818cf8'},
+  f:{label:'แรงเสียดทาน f', color:'#fb923c'},
+  X:{label:'"แรงพุ่งไปข้างหน้า" ติดตัววัตถุ', color:'#94a3b8'}   // แรงหลอก (มโนทัศน์คลาดเคลื่อนยอดฮิต)
+};
+const FBD_DIRS = {up:[0,-1], down:[0,1], left:[-1,0], right:[1,0], upleft:[-0.55,-0.84], downslope:[-0.84,0.55]};
+const FBD_DIR_TH = {up:'↑ ขึ้น', down:'↓ ลง', left:'← ซ้าย', right:'→ ขวา', upleft:'↖ ตั้งฉากกับพื้นเอียง'};
+
+const FBD_BANK = [
+ {id:'rest', title:'กล่องวางนิ่งบนพื้นราบ', scene:'ground', motion:null,
+  forces:{W:'down', N:'up'}, rel:{},
+  cmp:{q:'ขนาดแรงแนวฉาก N เทียบกับน้ำหนัก mg เป็นอย่างไร?', c:['N > mg','N = mg','N < mg'], a:1, x:'วัตถุนิ่ง สมดุลแนวดิ่ง → N = mg'}},
+ {id:'pull', title:'กล่องถูกดึงไปทางขวาบนพื้นฝืด (กำลังเคลื่อนที่)', scene:'ground', motion:'right', applied:'right',
+  forces:{W:'down', N:'up', F:'right', f:'left'}, rel:{},
+  cmp:{q:'ถ้ากล่องเคลื่อนที่ด้วยความเร็วคงตัว แรงดึง F เทียบกับแรงเสียดทาน f?', c:['F > f','F = f','F < f'], a:1, x:'ความเร็วคงตัว → สมดุล → F = f พอดี'}},
+ {id:'push', title:'กล่องถูกผลักไปทางขวาบนพื้นลื่น (ไม่มีแรงเสียดทาน)', scene:'ground', motion:'right', applied:'right',
+  forces:{W:'down', N:'up', F:'right'}, rel:{},
+  cmp:{q:'แรงลัพธ์ในแนวระดับมีขนาดเท่าใด?', c:['ศูนย์','เท่ากับ F','เท่ากับ mg'], a:1, x:'พื้นลื่นไม่มีแรงต้านแนวระดับ → ΣF แนวระดับ = F → กล่องมีความเร่ง'}},
+ {id:'hang', title:'กล่องแขวนนิ่งด้วยเชือกแนวดิ่งเส้นเดียว', scene:'hang', motion:null,
+  forces:{W:'down', T:'up'}, rel:{},
+  cmp:{q:'แรงตึงเชือก T เทียบกับน้ำหนัก mg?', c:['T > mg','T = mg','T < mg'], a:1, x:'วัตถุนิ่ง สมดุล → T = mg'}},
+ {id:'liftup', title:'กล่องวางบนพื้นลิฟต์ที่กำลังเร่ง "ขึ้น"', scene:'elevator', accel:'up', motion:'up',
+  forces:{W:'down', N:'up'}, rel:{N:1.4},
+  cmp:{q:'แรงแนวฉาก N เทียบกับ mg?', c:['N > mg','N = mg','N < mg'], a:0, x:'เร่งขึ้น: N − mg = ma → N = m(g + a) > mg จึงรู้สึกหนักขึ้น'}},
+ {id:'liftdn', title:'กล่องวางบนพื้นลิฟต์ที่กำลังเร่ง "ลง"', scene:'elevator', accel:'down', motion:'down',
+  forces:{W:'down', N:'up'}, rel:{N:0.6},
+  cmp:{q:'แรงแนวฉาก N เทียบกับ mg?', c:['N > mg','N = mg','N < mg'], a:2, x:'เร่งลง: mg − N = ma → N = m(g − a) < mg จึงรู้สึกเบาลง'}},
+ {id:'fall', title:'กล่องกำลังตกแบบเสรี', scene:'air', motion:'down',
+  forces:{W:'down'}, rel:{},
+  cmp:{q:'แรงลัพธ์ที่กระทำต่อกล่องคือข้อใด?', c:['ศูนย์','mg ทิศลง','mg ทิศขึ้น'], a:1, x:'ตกแบบเสรีมีแรงเดียวคือน้ำหนัก → ΣF = mg ทิศลง → a = g'}},
+ {id:'thrown', title:'ลูกบอลที่ถูกโยน กำลังลอย "ขึ้น" กลางอากาศ (ไม่คิดแรงต้าน)', scene:'air', motion:'up',
+  forces:{W:'down'}, rel:{},
+  cmp:{q:'ขณะลอยขึ้น มีแรงใดกระทำต่อลูกบอลบ้าง?', c:['น้ำหนัก mg ทิศลง เพียงแรงเดียว','แรงจากมือยังติดไปกับลูกบอล','mg ลง + แรงพุ่งขึ้น'], a:0, x:'มือปล่อยลูกบอลแล้ว "แรงโยน" ไม่ติดตัววัตถุ! เหลือเพียงน้ำหนัก จึงเคลื่อนที่ช้าลง'}},
+ {id:'incline', title:'กล่องไถลลงพื้นเอียงลื่น', scene:'incline', motion:'downslope',
+  forces:{W:'down', N:'upleft'}, rel:{N:0.8},
+  cmp:{q:'แรงแนวฉาก N เทียบกับ mg?', c:['N > mg','N = mg','N < mg'], a:2, x:'บนพื้นเอียง N = mg cos θ ซึ่งน้อยกว่า mg เสมอ'}},
+];
+
+const fbd = (()=>{
+  const cv = document.getElementById('fbdCv'), ctx = cv.getContext('2d');
+  let mode = 'pick', scn = null, lastId = null, answered = false, picked = new Set(), target = null;
+
+  document.querySelectorAll('#fbdModes .chip').forEach(c=> c.addEventListener('click', ()=>{
+    document.querySelectorAll('#fbdModes .chip').forEach(x=>x.classList.remove('active'));
+    c.classList.add('active'); mode = c.dataset.mode; next();
+  }));
+
+  function rnd(arr){ return arr[(Math.random()*arr.length)|0]; }
+  function pickScenario(filter){
+    let pool = FBD_BANK.filter(s=>!filter || filter(s));
+    if (pool.length > 1) pool = pool.filter(s=>s.id !== lastId);
+    const s = rnd(pool); lastId = s.id; return s;
+  }
+
+  /* ---------- วาดรูปสถานการณ์ ---------- */
+  function drawScene(s){
+    ctx.clearRect(0,0,900,300);
+    ctx.fillStyle = '#0d1626'; ctx.fillRect(0,0,900,300);
+    const bx = 430, bs = 62;
+    function box(x,y,rot){
+      ctx.save(); ctx.translate(x,y); if (rot) ctx.rotate(rot);
+      const g = ctx.createLinearGradient(-bs/2,-bs/2,-bs/2,bs/2);
+      g.addColorStop(0,'#8b5cf6'); g.addColorStop(1,'#6366f1');
+      ctx.fillStyle = g; ctx.beginPath(); ctx.roundRect(-bs/2,-bs/2,bs,bs,8); ctx.fill();
+      ctx.fillStyle = '#fff'; ctx.font = 'bold 14px Prompt'; ctx.textAlign = 'center';
+      ctx.fillText('m', 0, 5); ctx.restore(); ctx.textAlign = 'left';
+    }
+    function motionArrow(x1,y1,x2,y2){
+      ctx.save(); ctx.setLineDash([7,6]); arrow(ctx, x1,y1,x2,y2, '#22d3ee', 2.5); ctx.restore(); ctx.setLineDash([]);
+      ctx.fillStyle = '#22d3ee'; ctx.font = '12px Prompt';
+      ctx.fillText('ทิศการเคลื่อนที่', Math.min(x1,x2), Math.min(y1,y2) - 8);
+    }
+    if (s.scene === 'ground'){
+      ctx.fillStyle = '#2a3a63'; ctx.fillRect(0, 226, 900, 30);
+      box(bx, 226 - bs/2, 0);
+      if (s.applied === 'right'){ arrow(ctx, bx + bs/2 + 6, 195, bx + bs/2 + 90, 195, '#818cf8', 4);
+        ctx.fillStyle = '#818cf8'; ctx.font = '13px Prompt'; ctx.fillText('F', bx + bs/2 + 96, 199); }
+      if (s.motion === 'right') motionArrow(bx - 20, 130, bx + 70, 130);
+    } else if (s.scene === 'hang'){
+      ctx.fillStyle = '#2a3a63'; ctx.fillRect(300, 30, 300, 14);
+      ctx.strokeStyle = '#fbbf24'; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.moveTo(450, 44); ctx.lineTo(450, 155); ctx.stroke();
+      box(450, 155 + bs/2, 0);
+    } else if (s.scene === 'elevator'){
+      ctx.strokeStyle = '#5a6c99'; ctx.lineWidth = 4; ctx.strokeRect(330, 40, 240, 220);
+      ctx.fillStyle = '#131b31'; ctx.fillRect(332, 42, 236, 216);
+      ctx.fillStyle = '#2a3a63'; ctx.fillRect(332, 236, 236, 22);
+      box(450, 236 - bs/2, 0);
+      const up = s.accel === 'up';
+      arrow(ctx, 640, up ? 200 : 100, 640, up ? 100 : 200, '#f472b6', 5);
+      ctx.fillStyle = '#f472b6'; ctx.font = 'bold 15px Prompt'; ctx.fillText('a (ลิฟต์เร่ง' + (up ? 'ขึ้น' : 'ลง') + ')', 658, 155);
+    } else if (s.scene === 'air'){
+      ctx.fillStyle = '#e6ecff';
+      for (let i=0;i<30;i++) ctx.fillRect((i*173)%900, (i*91)%280, 1.5, 1.5);
+      box(450, 140, 0);
+      if (s.motion === 'down') (function(){ ctx.setLineDash([7,6]); arrow(ctx, 540, 110, 540, 200, '#22d3ee', 2.5); ctx.setLineDash([]);
+        ctx.fillStyle='#22d3ee'; ctx.font='12px Prompt'; ctx.fillText('ทิศการเคลื่อนที่', 552, 158); })();
+      if (s.motion === 'up') (function(){ ctx.setLineDash([7,6]); arrow(ctx, 540, 200, 540, 110, '#22d3ee', 2.5); ctx.setLineDash([]);
+        ctx.fillStyle='#22d3ee'; ctx.font='12px Prompt'; ctx.fillText('ทิศการเคลื่อนที่', 552, 158); })();
+    } else if (s.scene === 'incline'){
+      ctx.fillStyle = '#2a3a63';
+      ctx.beginPath(); ctx.moveTo(150, 260); ctx.lineTo(750, 260); ctx.lineTo(750, 90); ctx.closePath(); ctx.fill();
+      const ang = -Math.atan2(170, 600);
+      box(470, 158, ang);
+      ctx.save(); ctx.setLineDash([7,6]); arrow(ctx, 560, 150, 400, 196, '#22d3ee', 2.5); ctx.restore(); ctx.setLineDash([]);
+      ctx.fillStyle = '#22d3ee'; ctx.font = '12px Prompt'; ctx.fillText('ทิศการเคลื่อนที่ (ไถลลง)', 555, 135);
+      ctx.fillStyle = '#93a3c8'; ctx.font = '13px Prompt'; ctx.fillText('θ', 715, 252);
+    }
+    ctx.fillStyle = '#e6ecff'; ctx.font = 'bold 15px Prompt';
+    ctx.fillText('สถานการณ์: ' + s.title, 20, 26);
+  }
+
+  /* ---------- วาด FBD (จุด + ลูกศรแรง) ---------- */
+  function drawFBD(s){
+    ctx.clearRect(0,0,900,300);
+    ctx.fillStyle = '#0d1626'; ctx.fillRect(0,0,900,300);
+    const ox = 450, oy = 155, base = 78;
+    Object.keys(s.forces).forEach(k=>{
+      const d = FBD_DIRS[s.forces[k]];
+      const L = base * ((s.rel && s.rel[k]) || 1);
+      const x2 = ox + d[0]*L, y2 = oy + d[1]*L;
+      arrow(ctx, ox, oy, x2, y2, FBD_FORCES[k].color, 4);
+      ctx.fillStyle = FBD_FORCES[k].color; ctx.font = 'bold 15px Prompt';
+      ctx.fillText(k === 'W' ? 'mg' : k, x2 + d[0]*14 - 6, y2 + d[1]*14 + 5);
+    });
+    ctx.beginPath(); ctx.arc(ox, oy, 7, 0, 7); ctx.fillStyle = '#fff'; ctx.fill();
+    if (s.motion){
+      const d = FBD_DIRS[s.motion === 'downslope' ? 'downslope' : s.motion];
+      ctx.setLineDash([7,6]); arrow(ctx, 790, 90, 790 + d[0]*46, 90 + d[1]*46, '#22d3ee', 2.5); ctx.setLineDash([]);
+      ctx.fillStyle = '#22d3ee'; ctx.font = '12px Prompt'; ctx.textAlign = 'center';
+      ctx.fillText('ทิศการเคลื่อนที่', 790, 62); ctx.textAlign = 'left';
+    }
+    ctx.fillStyle = '#93a3c8'; ctx.font = '13px Prompt';
+    ctx.fillText('แผนภาพวัตถุอิสระ (ความยาวลูกศร ∝ ขนาดแรง)', 20, 26);
+  }
+
+  /* ---------- สร้างโจทย์ตามโหมด ---------- */
+  function next(){
+    answered = false; picked = new Set(); target = null;
+    document.getElementById('fbdExplain').classList.remove('show');
+    document.getElementById('fbdNext').style.visibility = 'hidden';
+    const q = document.getElementById('fbdQ'), opts = document.getElementById('fbdOpts');
+    const check = document.getElementById('fbdCheck');
+    check.style.display = 'none';
+    const abc = ['ก','ข','ค','ง','จ','ฉ'];
+
+    if (mode === 'pick'){
+      scn = pickScenario();
+      drawScene(scn);
+      q.textContent = 'แรงใดบ้างที่กระทำต่อวัตถุในสถานการณ์นี้? (เลือกได้หลายข้อ แล้วกดตรวจคำตอบ)';
+      opts.innerHTML = Object.keys(FBD_FORCES).map((k,i)=>
+        '<button class="q-opt" data-k="' + k + '" onclick="fbd.toggle(this)"><span class="abc">' + abc[i] + '</span>' + FBD_FORCES[k].label + '</button>').join('');
+      check.style.display = 'inline-flex';
+    } else if (mode === 'dir'){
+      scn = pickScenario();
+      drawScene(scn);
+      const ks = Object.keys(scn.forces); target = rnd(ks);
+      q.textContent = 'ในสถานการณ์นี้ "' + FBD_FORCES[target].label + '" มีทิศทางใด?';
+      const dirs = ['up','down','left','right','upleft'];
+      opts.innerHTML = dirs.map((d,i)=>
+        '<button class="q-opt" onclick="fbd.answer(\'' + d + '\')"><span class="abc">' + abc[i] + '</span>' + FBD_DIR_TH[d] + '</button>').join('');
+    } else if (mode === 'match'){
+      scn = pickScenario();
+      drawFBD(scn);
+      q.textContent = 'FBD ด้านล่างนี้ ตรงกับสถานการณ์ใด? (สังเกตชนิดแรง ความยาวลูกศร และทิศการเคลื่อนที่)';
+      const sig = o => JSON.stringify([o.forces, o.rel || {}, o.motion || '']);
+      let others = FBD_BANK.filter(o=>o.id !== scn.id && sig(o) !== sig(scn));
+      others = others.sort(()=>Math.random()-0.5).slice(0,3);
+      const choices = [scn, ...others].sort(()=>Math.random()-0.5);
+      opts.innerHTML = choices.map((c,i)=>
+        '<button class="q-opt" onclick="fbd.answer(\'' + c.id + '\')"><span class="abc">' + abc[i] + '</span>' + c.title + '</button>').join('');
+    } else if (mode === 'size'){
+      scn = pickScenario(s=>s.cmp);
+      drawScene(scn);
+      q.textContent = scn.cmp.q;
+      opts.innerHTML = scn.cmp.c.map((c,i)=>
+        '<button class="q-opt" onclick="fbd.answer(' + i + ')"><span class="abc">' + abc[i] + '</span>' + c + '</button>').join('');
+    }
+  }
+
+  function grade(ok, why){
+    answered = true;
+    S.fbd.done++;
+    const ex = document.getElementById('fbdExplain');
+    if (ok){ S.fbd.correct++; ex.innerHTML = '✅ <b>ถูกต้อง!</b> ' + why; addXP(8, 'FBD ถูกต้อง'); }
+    else { ex.innerHTML = '❌ <b>ยังไม่ถูก</b> — ' + why; save(); }
+    ex.classList.add('show');
+    document.getElementById('fbdNext').style.visibility = 'visible';
+    document.getElementById('fbdCheck').style.display = 'none';
+    updateScore(); checkBadges();
+  }
+
+  function toggle(btn){
+    if (answered) return;
+    const k = btn.dataset.k;
+    if (picked.has(k)){ picked.delete(k); btn.classList.remove('selected'); }
+    else { picked.add(k); btn.classList.add('selected'); }
+  }
+  function submit(){
+    if (answered || mode !== 'pick') return;
+    const want = new Set(Object.keys(scn.forces));
+    const btns = document.querySelectorAll('#fbdOpts .q-opt');
+    btns.forEach(b=>{
+      const k = b.dataset.k; b.disabled = true;
+      if (want.has(k)) b.classList.add('right');
+      else if (picked.has(k)) b.classList.add('wrong');
+    });
+    const ok = picked.size === want.size && [...picked].every(k=>want.has(k));
+    const names = [...want].map(k=>FBD_FORCES[k].label).join(' · ');
+    grade(ok, 'แรงที่กระทำจริงคือ: ' + names + (want.has('X') ? '' : ' — และไม่มี "แรงพุ่งไปข้างหน้า" ติดตัววัตถุ!'));
+    drawFBD(scn);   // เฉลยด้วยภาพ FBD ที่ถูกต้อง
+  }
+  function answer(v){
+    if (answered) return;
+    const btns = document.querySelectorAll('#fbdOpts .q-opt');
+    btns.forEach(b=>b.disabled = true);
+    if (mode === 'dir'){
+      const correct = scn.forces[target];
+      btns.forEach(b=>{ if (b.textContent.includes(FBD_DIR_TH[correct].slice(2))) b.classList.add('right'); });
+      if (v !== correct) [...btns].find(b=>b.textContent.includes(FBD_DIR_TH[v].slice(2)))?.classList.add('wrong');
+      grade(v === correct, FBD_FORCES[target].label + ' มีทิศ ' + FBD_DIR_TH[correct] + ' — ' + (target === 'W' ? 'น้ำหนักชี้ลงเสมอ' : target === 'N' ? 'แรงแนวฉากตั้งฉากผิวสัมผัสเสมอ' : target === 'f' ? 'แรงเสียดทานสวนทิศการเคลื่อนที่' : target === 'T' ? 'แรงตึงเชือกดึงตามแนวเชือก' : 'ตามทิศที่ออกแรงกระทำ'));
+      drawFBD(scn);
+    } else if (mode === 'match'){
+      btns.forEach(b=>{ if (b.textContent.slice(1).trim() === scn.title) b.classList.add('right'); });
+      const chosen = FBD_BANK.find(o=>o.id === v);
+      if (v !== scn.id) [...btns].find(b=>b.textContent.slice(1).trim() === chosen.title)?.classList.add('wrong');
+      grade(v === scn.id, 'FBD นี้คือ "' + scn.title + '" (' + Object.keys(scn.forces).map(k=>k==='W'?'mg':k).join(', ') + ')');
+    } else if (mode === 'size'){
+      btns[scn.cmp.a].classList.add('right');
+      if (v !== scn.cmp.a) btns[v].classList.add('wrong');
+      grade(v === scn.cmp.a, scn.cmp.x);
+    }
+  }
+  function updateScore(){
+    document.getElementById('fbdDone').textContent = S.fbd.done + ' ข้อ';
+    document.getElementById('fbdCorrect').textContent = S.fbd.correct + ' ข้อ';
+    document.getElementById('fbdAcc').textContent = S.fbd.done ? Math.round(S.fbd.correct/S.fbd.done*100) + '%' : '—';
+  }
+  updateScore(); next();
+  return {next, toggle, submit, answer};
+})();
+
+/* ================== INIT ส่วนขยาย ================== */
+initCloud();
+</script>
+<!-- PhysiQuest v3 — บทเรียน 8 บท · แบบจำลอง 6 · ฝึก FBD 4 โหมด · ระบบคลาวด์ -->
+</body>
+</html>
