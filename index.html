@@ -656,6 +656,11 @@ select.sel{background:var(--card2);color:var(--txt);border:1.5px solid var(--lin
     <div class="formula-box">ทำมุม θ ต่อกัน: ΣF = √(F₁² + F₂² + 2F₁F₂cos θ)<small>สูตรทั่วไป — แทน θ = 90° จะได้พีทาโกรัส, θ = 0° ได้ F₁+F₂, θ = 180° ได้ F₁−F₂</small></div>
     <div class="key-point">💡 <b>เช็กเร็ว:</b> แรงลัพธ์ของแรงสองแรงมีค่าได้ระหว่าง |F₁ − F₂| (มุม 180°) ถึง F₁ + F₂ (มุม 0°) เท่านั้น</div>
 
+    <h3>แรงที่ทำให้สมดุล (Equilibrant)</h3>
+    <p>ถ้าต้องการให้วัตถุที่ถูกแรง F₁ และ F₂ กระทำอยู่<b>กลับมาสมดุล</b> ต้องเพิ่มแรงอีกหนึ่งแรง เรียกว่า <b>แรงที่ทำให้สมดุล (E)</b> ซึ่งมี<b>ขนาดเท่าแรงลัพธ์</b> แต่มี<b>ทิศตรงข้าม</b> (ต่างกัน 180°)</p>
+    <div class="formula-box"><var>E</var> = Σ<var>F</var> (ขนาดเท่ากัน) · ทิศตรงข้ามกับแรงลัพธ์<small>เมื่อรวมแล้ว F₁ + F₂ + E = 0 → วัตถุจึงอยู่ในสมดุล</small></div>
+    <div class="key-point">🧭 <b>ตัวอย่าง:</b> ถ้าแรงลัพธ์ = 50 N ทำมุม 53° แรงที่ทำให้สมดุลคือ 50 N ที่มุม 53° + 180° = <b>233°</b></div>
+
     <details class="example">
       <summary>ตัวอย่างที่ 4.1 — แรงตั้งฉากกัน</summary>
       <div class="sol">
@@ -684,7 +689,7 @@ select.sel{background:var(--card2);color:var(--txt);border:1.5px solid var(--lin
       </div>
       <div class="qc-fb"></div>
     </div>
-    <p><a class="sim-link" onclick="showPage('sims');scrollToSim('simBox6')">🧪 ลองปรับมุมระหว่างแรงในแบบจำลองแรงลัพธ์ →</a></p>
+    <p><a class="sim-link" onclick="showPage('sims');scrollToSim('simBox6')">🧪 ลองแบบจำลองแรงลัพธ์ — สลับดูวิธีหางต่อหัว/สี่เหลี่ยมด้านขนาน และกดหาแรงที่ทำให้สมดุล →</a></p>
     <div class="read-done"><button class="btn gold" onclick="markRead(4)" id="readBtn4">✅ อ่านจบบทที่ 4 แล้ว (+15 XP)</button></div>
   </div>
 
@@ -1052,17 +1057,27 @@ select.sel{background:var(--card2);color:var(--txt);border:1.5px solid var(--lin
 
   <!-- SIM 6 -->
   <div class="card sim-panel" id="simBox6">
-    <h3>➕ 6. การหาแรงลัพธ์ของแรงสองแรงที่ทำมุมกัน</h3>
-    <p class="desc">ปรับขนาดแรง F₁ F₂ และมุมระหว่างแรง θ — แรงลัพธ์ (สีทอง) คือเส้นทแยงมุมของรูปสี่เหลี่ยมด้านขนาน ลอง θ = 90° แล้วเทียบกับพีทาโกรัส, θ = 0° และ 180° เทียบกับการบวก/ลบตรง ๆ</p>
-    <canvas id="simCv6" class="sim-stage" width="900" height="360"></canvas>
+    <h3>➕ 6. การหาแรงลัพธ์ และแรงที่ทำให้สมดุล</h3>
+    <p class="desc">ปรับขนาดแรง F₁ F₂ และมุม θ แล้วสลับดูได้ทั้ง <b>วิธีหางต่อหัว</b> (ย้ายหาง F₂ ไปต่อที่หัว F₁) และ <b>วิธีสี่เหลี่ยมด้านขนาน</b> — แรงลัพธ์คือลูกศรสีทอง · กดปุ่ม ⚖️ เพื่อหา <b>แรงที่ทำให้สมดุล (Equilibrant)</b> ซึ่งขนาดเท่าแรงลัพธ์แต่ทิศตรงข้าม ทำให้ ΣF = 0</p>
+    <canvas id="simCv6" class="sim-stage" width="900" height="420"></canvas>
     <div class="sim-controls">
       <div class="ctl"><label>แรง F₁ (N) <output id="s6f1Out">30</output></label><input type="range" id="s6f1" min="10" max="100" value="30" step="5"></div>
       <div class="ctl"><label>แรง F₂ (N) <output id="s6f2Out">40</output></label><input type="range" id="s6f2" min="10" max="100" value="40" step="5"></div>
       <div class="ctl"><label>มุมระหว่างแรง θ (°) <output id="s6thOut">90</output></label><input type="range" id="s6th" min="0" max="180" value="90" step="5"></div>
+      <div class="ctl" style="flex:0 1 auto;min-width:200px">
+        <label>วิธีเขียนเวกเตอร์</label>
+        <select class="sel" id="s6method">
+          <option value="tail" selected>หางต่อหัว (Head-to-Tail)</option>
+          <option value="para">สี่เหลี่ยมด้านขนาน</option>
+          <option value="both">แสดงทั้งสองวิธีพร้อมกัน</option>
+        </select>
+      </div>
+      <button class="btn sm ghost" id="s6eqBtn" onclick="sim6.toggleEq()">⚖️ แสดงแรงที่ทำให้สมดุล</button>
     </div>
     <div class="readouts">
-      <div class="readout">แรงลัพธ์ ΣF<b id="s6R">50 N</b></div>
-      <div class="readout">มุมของแรงลัพธ์เทียบ F₁<b id="s6ang">53°</b></div>
+      <div class="readout">แรงลัพธ์ ΣF<b id="s6R">50.0 N</b></div>
+      <div class="readout">ทิศแรงลัพธ์ (จาก F₁)<b id="s6ang">53°</b></div>
+      <div class="readout">แรงที่ทำให้สมดุล E<b id="s6E">50.0 N ที่ 233°</b></div>
     </div>
   </div>
 </section>
@@ -1458,13 +1473,14 @@ function arrow(ctx, x1,y1,x2,y2, color, w){
 /* ================== SIM 1 : รถแนวตรง + กราฟ ================== */
 const sim1 = (()=>{
   const cv = document.getElementById('simCv1'), ctx = cv.getContext('2d');
-  let t = 0, x = 0, v = 0, run = false, last = 0, hist = [];
+  let t = 0, x = 0, v = 0, run = false, last = 0, hist = [], facing = 1;
   const uEl = bindRange('s1u','s1uOut', ()=>{ if(!run) reset(); });
   const aEl = bindRange('s1a','s1aOut', ()=>{});
   const X2PX = m => 450 + m * 4.1;   // -100..100 m → 40..860 px
 
   function reset(){
     run = false; t = 0; x = 0; v = +uEl.value; hist = [];
+    if (Math.abs(v) > 0.01) facing = v > 0 ? 1 : -1;
     document.getElementById('s1play').textContent = '▶ เล่น';
     readouts(); draw();
   }
@@ -1479,6 +1495,7 @@ const sim1 = (()=>{
     let dt = Math.min((now - last)/1000, 0.05); last = now;
     const a = +aEl.value;
     v += a*dt; x += v*dt; t += dt;
+    if (Math.abs(v) > 0.01) facing = v > 0 ? 1 : -1;   // หัวรถหันตามทิศความเร็วจริง
     hist.push({t, x, v});
     if (t >= 12 || Math.abs(x) > 100){ run = false; document.getElementById('s1play').textContent = '▶ เล่น'; }
     readouts(); draw();
@@ -1488,6 +1505,28 @@ const sim1 = (()=>{
     document.getElementById('s1t').textContent = t.toFixed(1) + ' s';
     document.getElementById('s1x').textContent = x.toFixed(1) + ' m';
     document.getElementById('s1v').textContent = v.toFixed(1) + ' m/s';
+  }
+  function drawCar(px, py, dir){
+    // รถต้นแบบหันหน้าไปทางขวา · dir = 1 ไปขวา, −1 ไปซ้าย (พลิกภาพ)
+    ctx.save(); ctx.translate(px, py); ctx.scale(dir, 1);
+    const body = ctx.createLinearGradient(0, -22, 0, 8);
+    body.addColorStop(0, '#a5b4fc'); body.addColorStop(1, '#4f46e5');
+    ctx.fillStyle = body;
+    ctx.beginPath();
+    ctx.moveTo(-27, 6); ctx.lineTo(-29, -5); ctx.lineTo(-16, -8);
+    ctx.lineTo(-8, -20); ctx.lineTo(11, -20); ctx.lineTo(18, -8);
+    ctx.lineTo(28, -5); ctx.lineTo(29, 6); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = 'rgba(191,232,255,.9)';       // กระจก
+    ctx.beginPath(); ctx.moveTo(-6, -18); ctx.lineTo(9, -18); ctx.lineTo(14, -9); ctx.lineTo(-13, -9); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#fde68a';                     // ไฟหน้า (อยู่ด้านหัวรถ)
+    ctx.beginPath(); ctx.arc(26, 0, 3.4, 0, 7); ctx.fill();
+    ctx.fillStyle = '#f87171';                     // ไฟท้าย
+    ctx.fillRect(-30, -3, 3, 5);
+    ctx.fillStyle = '#1e293b';                     // ล้อ
+    [-15, 15].forEach(wx=>{ ctx.beginPath(); ctx.arc(wx, 7, 7.5, 0, 7); ctx.fill(); });
+    ctx.fillStyle = '#94a3b8';
+    [-15, 15].forEach(wx=>{ ctx.beginPath(); ctx.arc(wx, 7, 3, 0, 7); ctx.fill(); });
+    ctx.restore();
   }
   function graph(px, py, pw, ph, title, ymin, ymax, key, color){
     ctx.strokeStyle = 'rgba(148,163,255,.25)'; ctx.lineWidth = 1;
@@ -1518,12 +1557,9 @@ const sim1 = (()=>{
       ctx.fillText(m + ' m', px, 132);
     }
     ctx.textAlign = 'left';
-    // รถ
+    // รถ (วาดเองเพื่อให้หัวรถหันตามทิศการเคลื่อนที่ได้ถูกต้องทุกเครื่อง)
     const cx = X2PX(Math.max(-100, Math.min(100, x)));
-    ctx.font = '38px serif'; ctx.save();
-    ctx.translate(cx, 92);
-    if (v < -0.01) ctx.scale(-1,1);
-    ctx.fillText('🚗', -22, 0); ctx.restore();
+    drawCar(cx, 100, facing);
     // ลูกศรความเร็ว
     if (Math.abs(v) > 0.3) arrow(ctx, cx, 46, cx + Math.max(-90, Math.min(90, v*2.2)), 46, '#22d3ee', 3.5);
     ctx.fillStyle = '#22d3ee'; ctx.font = '12px Prompt'; ctx.fillText('v', cx + 6, 38);
@@ -1809,52 +1845,126 @@ const sim5 = (()=>{
   return {draw};
 })();
 
-/* ================== SIM 6 : แรงลัพธ์ของแรงสองแรง ================== */
+/* ================== SIM 6 : แรงลัพธ์ + แรงที่ทำให้สมดุล ================== */
 const sim6 = (()=>{
   const cv = document.getElementById('simCv6'), ctx = cv.getContext('2d');
-  let used = false;
+  const W = 900, H = 420, PAD = 88;
+  let used = false, showEq = false;
   function mark(){ if (!used){ used = true; simUsed(6); } }
   const f1El = bindRange('s6f1','s6f1Out', ()=>{ mark(); draw(); });
   const f2El = bindRange('s6f2','s6f2Out', ()=>{ mark(); draw(); });
   const thEl = bindRange('s6th','s6thOut', ()=>{ mark(); draw(); });
-  const OX = 300, OY = 270, SC = 1.9;   // จุดกำเนิดและสเกล px ต่อ N
+  const mEl = document.getElementById('s6method');
+  mEl.addEventListener('change', ()=>{ mark(); draw(); });
+
+  function toggleEq(){
+    showEq = !showEq; mark();
+    document.getElementById('s6eqBtn').textContent = showEq ? '⚖️ ซ่อนแรงที่ทำให้สมดุล' : '⚖️ แสดงแรงที่ทำให้สมดุล';
+    draw();
+  }
+
   function draw(){
     const F1 = +f1El.value, F2 = +f2El.value, th = +thEl.value * Math.PI/180;
+    const method = mEl.value;
+    const showPara = method === 'para' || method === 'both';
+    const showTail = method === 'tail' || method === 'both';
     const R = Math.sqrt(F1*F1 + F2*F2 + 2*F1*F2*Math.cos(th));
     const alpha = Math.atan2(F2*Math.sin(th), F1 + F2*Math.cos(th));
+    const eqAng = ((alpha*180/Math.PI + 180) % 360 + 360) % 360;
     document.getElementById('s6R').textContent = R.toFixed(1) + ' N';
     document.getElementById('s6ang').textContent = (alpha*180/Math.PI).toFixed(0) + '°';
-    ctx.clearRect(0,0,900,360);
-    ctx.fillStyle = '#0a0f1e'; ctx.fillRect(0,0,900,360);
-    // ปลายเวกเตอร์ (แกน y จอคว่ำลง จึงใช้ -sin)
-    const x1 = OX + F1*SC,                 y1 = OY;
-    const x2 = OX + F2*SC*Math.cos(th),    y2 = OY - F2*SC*Math.sin(th);
-    const xr = OX + (x1-OX) + (x2-OX),     yr = OY + (y1-OY) + (y2-OY);
-    // รูปสี่เหลี่ยมด้านขนาน (เส้นประ)
-    ctx.strokeStyle = 'rgba(148,163,255,.45)'; ctx.setLineDash([6,6]); ctx.lineWidth = 1.5;
-    ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(xr,yr); ctx.lineTo(x2,y2); ctx.stroke();
+    document.getElementById('s6E').textContent = R < 0.05 ? 'ไม่ต้องใช้ (สมดุลอยู่แล้ว)' : R.toFixed(1) + ' N ที่ ' + eqAng.toFixed(0) + '°';
+
+    // พิกัดในหน่วยแรง (แกน y ชี้ขึ้นตามคณิตศาสตร์)
+    const O = {x:0, y:0};
+    const A = {x:F1, y:0};                                  // ปลาย F₁
+    const C = {x:F2*Math.cos(th), y:F2*Math.sin(th)};       // ปลาย F₂ เมื่อวางหางที่จุดกำเนิด
+    const B = {x:A.x + C.x, y:A.y + C.y};                   // ปลายแรงลัพธ์
+    const E = {x:-B.x, y:-B.y};                             // ปลายแรงที่ทำให้สมดุล
+    // ปรับสเกลอัตโนมัติให้ทุกเวกเตอร์อยู่ในกรอบเสมอ
+    const pts = [O, A, B].concat(showPara ? [C] : [], showEq ? [E] : []);
+    const xs = pts.map(p=>p.x), ys = pts.map(p=>p.y);
+    const minX = Math.min(...xs), maxX = Math.max(...xs);
+    const minY = Math.min(...ys), maxY = Math.max(...ys);
+    const sc = Math.min((W - PAD*2)/Math.max(maxX-minX, 1), (H - PAD*2)/Math.max(maxY-minY, 1), 3.2);
+    const ox = PAD + ((W - PAD*2) - (maxX-minX)*sc)/2 - minX*sc;
+    const oy = PAD + ((H - PAD*2) - (maxY-minY)*sc)/2 + maxY*sc;
+    const P = p => [ox + p.x*sc, oy - p.y*sc];
+    const label = (p1, p2, text, color, offx, offy)=>{
+      const [x1,y1] = P(p1), [x2,y2] = P(p2);
+      ctx.fillStyle = color; ctx.font = 'bold 14px Prompt';
+      ctx.fillText(text, (x1+x2)/2 + (offx||0), (y1+y2)/2 + (offy||0));
+    };
+    const dot = (p, color)=>{ const [x,y] = P(p); ctx.beginPath(); ctx.arc(x,y,5,0,7); ctx.fillStyle = color; ctx.fill(); };
+
+    ctx.clearRect(0,0,W,H);
+    ctx.fillStyle = '#0a0f1e'; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle = 'rgba(230,236,255,.55)';
+    for (let i=0;i<46;i++) ctx.fillRect((i*151)%W, (i*83)%H, 1.2, 1.2);
+
+    // เส้นประประกอบรูป
+    ctx.setLineDash([6,6]); ctx.strokeStyle = 'rgba(148,163,255,.42)'; ctx.lineWidth = 1.5;
+    if (showPara){ ctx.beginPath(); ctx.moveTo(...P(C)); ctx.lineTo(...P(B)); ctx.stroke(); }
+    if (showPara && !showTail){ ctx.beginPath(); ctx.moveTo(...P(A)); ctx.lineTo(...P(B)); ctx.stroke(); }
     ctx.setLineDash([]);
-    // ส่วนโค้งแสดงมุม θ
-    ctx.strokeStyle = '#a855f7'; ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.arc(OX, OY, 34, -th, 0); ctx.stroke();
-    ctx.fillStyle = '#d8b4fe'; ctx.font = '14px Prompt';
-    ctx.fillText('θ = ' + thEl.value + '°', OX + 42*Math.cos(th/2) + 4, OY - 42*Math.sin(th/2));
+
+    // ส่วนโค้งมุม θ (โหมดหางต่อหัววัดที่หัว F₁ · โหมดสี่เหลี่ยมวัดที่จุดกำเนิด)
+    const pivot = showPara ? O : A;
+    const [px, py] = P(pivot);
+    if (!showPara){   // เส้นอ้างอิงแนว F₁ ต่อออกไป เพื่อให้เห็นว่ามุม θ วัดจากแนวเดิม
+      ctx.setLineDash([4,5]); ctx.strokeStyle = 'rgba(129,140,248,.55)'; ctx.lineWidth = 1.2;
+      ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(px + 52, py); ctx.stroke(); ctx.setLineDash([]);
+    }
+    if (+thEl.value > 0){
+      ctx.strokeStyle = '#a855f7'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(px, py, 32, -th, 0); ctx.stroke();
+      ctx.fillStyle = '#d8b4fe'; ctx.font = '13.5px Prompt';
+      ctx.fillText('θ = ' + thEl.value + '°', px + 40*Math.cos(th/2), py - 40*Math.sin(th/2));
+    }
+
     // เวกเตอร์แรง
-    arrow(ctx, OX, OY, x1, y1, '#818cf8', 4);
-    arrow(ctx, OX, OY, x2, y2, '#22d3ee', 4);
-    arrow(ctx, OX, OY, xr, yr, '#fbbf24', 5);
-    ctx.font = 'bold 15px Prompt';
-    ctx.fillStyle = '#818cf8'; ctx.fillText('F₁ = ' + F1 + ' N', x1 + 10, y1 + 5);
-    ctx.fillStyle = '#22d3ee'; ctx.fillText('F₂ = ' + F2 + ' N', x2 + 8, y2 - 8);
-    ctx.fillStyle = '#fbbf24'; ctx.fillText('ΣF = ' + R.toFixed(1) + ' N', xr + 10, yr - 6);
-    // จุดกำเนิด
-    ctx.beginPath(); ctx.arc(OX, OY, 5, 0, 7); ctx.fillStyle = '#fff'; ctx.fill();
-    // สูตร
-    ctx.fillStyle = '#93a3c8'; ctx.font = '14px Prompt';
-    ctx.fillText('ΣF = √(F₁² + F₂² + 2F₁F₂cos θ) = ' + R.toFixed(1) + ' N', 30, 34);
+    arrow(ctx, ...P(O), ...P(A), '#818cf8', 4);
+    label(O, A, 'F₁ = ' + F1 + ' N', '#818cf8', -28, 24);
+    if (showPara){
+      arrow(ctx, ...P(O), ...P(C), '#22d3ee', 4);
+      label(O, C, 'F₂ = ' + F2 + ' N', '#22d3ee', -70, 0);
+    }
+    if (showTail){
+      arrow(ctx, ...P(A), ...P(B), '#22d3ee', 4);
+      label(A, B, 'F₂ = ' + F2 + ' N (ย้ายหางมาต่อหัว F₁)', '#22d3ee', 14, -6);
+    }
+    if (R > 0.05){
+      arrow(ctx, ...P(O), ...P(B), '#fbbf24', 5);
+      label(O, B, 'ΣF = ' + R.toFixed(1) + ' N', '#fbbf24', -20, -14);
+    }
+    if (showEq && R > 0.05){
+      arrow(ctx, ...P(O), ...P(E), '#f472b6', 5);
+      label(O, E, 'E = ' + R.toFixed(1) + ' N', '#f472b6', 10, 18);
+    }
+    dot(O, '#fff');
+    if (showTail) dot(A, '#c7d2fe');
+
+    // แถบข้อความอธิบายด้านบน
+    ctx.fillStyle = 'rgba(11,17,32,.82)'; ctx.fillRect(0, 0, W, showEq ? 76 : 54);
+    ctx.font = '14px Prompt'; ctx.fillStyle = '#93a3c8';
+    ctx.fillText('ΣF = √(F₁² + F₂² + 2F₁F₂cos θ) = √(' + F1 + '² + ' + F2 + '² + 2·' + F1 + '·' + F2 + '·cos ' + thEl.value + '°) = ' + R.toFixed(1) + ' N', 26, 24);
+    ctx.fillStyle = showTail && !showPara ? '#a5f3fc' : '#c4b5fd';
+    ctx.fillText(showPara && showTail ? '📐 แสดงทั้งสองวิธี — ได้ปลายลูกศรจุดเดียวกันเสมอ'
+      : showPara ? '📐 วิธีสี่เหลี่ยมด้านขนาน — วางหางทั้งสองแรงที่จุดเดียวกัน แรงลัพธ์คือเส้นทแยงมุม'
+      : '📐 วิธีหางต่อหัว — ย้ายหาง F₂ ไปต่อที่หัว F₁ แล้วลากจากหาง F₁ ไปหัว F₂ คือแรงลัพธ์', 26, 45);
+    if (showEq){
+      ctx.fillStyle = '#f9a8d4'; ctx.font = 'bold 14px Prompt';
+      ctx.fillText(R < 0.05
+        ? '⚖️ แรงลัพธ์เป็นศูนย์อยู่แล้ว → วัตถุสมดุล ไม่ต้องเพิ่มแรงใด'
+        : '⚖️ แรงที่ทำให้สมดุล E = ' + R.toFixed(1) + ' N ทิศตรงข้ามแรงลัพธ์ (' + eqAng.toFixed(0) + '°) · เพราะ F₁ + F₂ + E = 0', 26, 66);
+    }
+    if (R < 0.05){
+      ctx.fillStyle = '#34d399'; ctx.font = 'bold 16px Prompt'; ctx.textAlign = 'center';
+      ctx.fillText('ΣF = 0 → วัตถุอยู่ในสมดุลพอดี', W/2, H - 30); ctx.textAlign = 'left';
+    }
   }
   draw();
-  return {draw};
+  return {draw, toggleEq};
 })();
 </script>
 
@@ -2032,6 +2142,11 @@ hard: [
   sol:{known:'m₁ = 2 kg, m₂ = 3 kg, F = 20 N (ดึงก้อน 3 kg), พื้นลื่น · ถามหา แรงตึงเชือก T',
    steps:[['a','F / (m₁ + m₂)','ขั้นที่ 1: คิดทั้งระบบ (เชือกเบา ทุกก้อน a เท่ากัน)'],['','20 / (2 + 3)','แทนค่า'],['','20 / 5',''],['a','4 m/s²',''],['T','m₁a','ขั้นที่ 2: คิดเฉพาะก้อน 2 kg (มีแรง T ดึงแรงเดียว)'],['','(2)(4)','แทนค่า'],['T','8 N','']],
    concl:'แรงตึงเชือก = 8 N'}},
+ {q:'วัตถุถูกแรง 6 N และ 8 N กระทำในทิศตั้งฉากกัน ต้องเพิ่มแรงขนาดเท่าใดจึงจะทำให้วัตถุสมดุล?', c:['2 N','10 N ทิศเดียวกับแรงลัพธ์','10 N ทิศตรงข้ามแรงลัพธ์','14 N ทิศตรงข้ามแรงลัพธ์'], a:2,
+  x:'แรงที่ทำให้สมดุลมีขนาดเท่าแรงลัพธ์ แต่ทิศตรงข้าม',
+  sol:{known:'F₁ = 6 N, F₂ = 8 N ตั้งฉากกัน · ถามหา แรงที่ทำให้สมดุล E',
+   steps:[['ΣF','√(F₁² + F₂²)','หาแรงลัพธ์ก่อน (ตั้งฉาก → พีทาโกรัส)'],['','√(6² + 8²)','แทนค่า'],['','√100',''],['ΣF','10 N',''],['E','ΣF','แรงสมดุลขนาดเท่าแรงลัพธ์'],['E','10 N (ทิศตรงข้าม)','เพื่อให้ F₁ + F₂ + E = 0']],
+   concl:'ต้องเพิ่มแรง 10 N ทิศตรงข้ามกับแรงลัพธ์'}},
  {q:'แรงขนาด 10 N สองแรง ทำมุม 60° ต่อกัน แรงลัพธ์มีขนาดเท่าใด?', c:['10 N','10√2 N','10√3 N','20 N'], a:2,
   x:'ใช้สูตรแรงลัพธ์ของแรงสองแรงที่ทำมุมต่อกัน',
   sol:{known:'F₁ = F₂ = 10 N, มุมระหว่างแรง θ = 60° · ถามหา แรงลัพธ์ ΣF',
